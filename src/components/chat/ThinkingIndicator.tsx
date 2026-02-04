@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Loader2, Brain, Search, Sparkles, CheckCircle2, XCircle } from "lucide-react";
 
 interface ThinkingIndicatorProps {
@@ -15,7 +16,7 @@ const statusConfig = {
   },
   thinking: {
     icon: Brain,
-    text: "AI sedang berpikir...",
+    text: "AI sedang berpikir",
     color: "text-purple-500",
     bgColor: "bg-purple-500/10",
   },
@@ -40,8 +41,35 @@ const statusConfig = {
 };
 
 const ThinkingIndicator = ({ thinking, status, errorMessage }: ThinkingIndicatorProps) => {
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const config = statusConfig[status];
   const Icon = config.icon;
+
+  // Timer to show elapsed time
+  useEffect(() => {
+    if (status === "idle" || status === "error") {
+      setElapsedSeconds(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [status]);
+
+  // Reset timer when status changes
+  useEffect(() => {
+    setElapsedSeconds(0);
+  }, [status]);
+
+  const formatTime = (seconds: number) => {
+    if (seconds < 60) return `${seconds}d`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}d`;
+  };
 
   return (
     <div className="flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -60,6 +88,9 @@ const ThinkingIndicator = ({ thinking, status, errorMessage }: ThinkingIndicator
           )}
           <span className={`text-sm font-medium ${config.color}`}>
             {config.text}
+            {status !== "idle" && status !== "error" && elapsedSeconds > 0 && (
+              <span className="text-muted-foreground ml-2">({formatTime(elapsedSeconds)})</span>
+            )}
           </span>
         </div>
 

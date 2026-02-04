@@ -54,11 +54,12 @@ export async function streamAiResponse(
       body: JSON.stringify({
         model: "moonshotai/kimi-k2.5",
         messages: messages,
-        max_tokens: 4096,
+        max_tokens: 8192,
         temperature: 0.7,
         top_p: 0.95,
         stream: true,
-        chat_template_kwargs: { thinking: true },
+        // Disable thinking mode for faster responses
+        // chat_template_kwargs: { thinking: true },
       }),
     });
 
