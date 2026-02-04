@@ -1,23 +1,67 @@
-import { Play, Pause, BookOpen, Volume2 } from "lucide-react";
+import { Play, Pause, BookOpen, Volume2, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Ayat } from "@/types/quran";
+import { cn } from "@/lib/utils";
 
 interface AyatCardProps {
   ayat: Ayat;
+  surahNumber?: number;
+  surahName?: string;
+  surahNameArabic?: string;
   onPlayAudio: (ayat: Ayat) => void;
   isPlaying: boolean;
   onShowTafsir: (ayatNumber: number) => void;
+  isBookmarked?: boolean;
+  onToggleBookmark?: () => void;
+  showLatin?: boolean;
+  showTranslation?: boolean;
+  fontSize?: "small" | "medium" | "large";
 }
 
-export function AyatCard({ ayat, onPlayAudio, isPlaying, onShowTafsir }: AyatCardProps) {
+const fontSizeClasses = {
+  small: "text-xl sm:text-2xl",
+  medium: "text-2xl sm:text-3xl",
+  large: "text-3xl sm:text-4xl",
+};
+
+export function AyatCard({ 
+  ayat, 
+  onPlayAudio, 
+  isPlaying, 
+  onShowTafsir,
+  isBookmarked = false,
+  onToggleBookmark,
+  showLatin = true,
+  showTranslation = true,
+  fontSize = "medium",
+}: AyatCardProps) {
   return (
-    <div className="group rounded-xl bg-card border border-border p-4 sm:p-5 md:p-6 transition-all hover:shadow-card hover:border-quran-gold/30 animate-fade-in">
+    <div 
+      id={`ayat-${ayat.nomorAyat}`}
+      className="group rounded-xl bg-card border border-border p-4 sm:p-5 md:p-6 transition-all hover:shadow-card hover:border-quran-gold/30 animate-fade-in"
+    >
       {/* Header with Ayat Number and Actions */}
       <div className="flex items-start justify-between mb-4 sm:mb-5">
         <div className="ayat-number">
           {ayat.nomorAyat}
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
+          {onToggleBookmark && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleBookmark}
+              className={cn(
+                "h-9 w-9 sm:h-10 sm:w-10 touch-target",
+                isBookmarked 
+                  ? "text-quran-gold hover:text-quran-gold/80 hover:bg-quran-gold/10" 
+                  : "hover:bg-primary/10 hover:text-primary"
+              )}
+              title={isBookmarked ? "Hapus Bookmark" : "Tambah Bookmark"}
+            >
+              <Bookmark className={cn("h-4 w-4 sm:h-5 sm:w-5", isBookmarked && "fill-current")} />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -45,20 +89,27 @@ export function AyatCard({ ayat, onPlayAudio, isPlaying, onShowTafsir }: AyatCar
 
       {/* Arabic Text */}
       <div className="mb-5 sm:mb-6 text-right py-2 sm:py-4 px-2 sm:px-4 rounded-lg bg-muted/30">
-        <p className="arabic-text-lg leading-loose">
+        <p className={cn(
+          "font-arabic leading-loose text-foreground",
+          fontSizeClasses[fontSize]
+        )}>
           {ayat.teksArab}
         </p>
       </div>
 
       {/* Latin Transliteration */}
-      <p className="mb-3 text-sm sm:text-base text-muted-foreground italic leading-relaxed">
-        {ayat.teksLatin}
-      </p>
+      {showLatin && (
+        <p className="mb-3 text-sm sm:text-base text-muted-foreground italic leading-relaxed">
+          {ayat.teksLatin}
+        </p>
+      )}
 
       {/* Indonesian Translation */}
-      <p className="text-sm sm:text-base text-foreground leading-relaxed">
-        {ayat.teksIndonesia}
-      </p>
+      {showTranslation && (
+        <p className="text-sm sm:text-base text-foreground leading-relaxed">
+          {ayat.teksIndonesia}
+        </p>
+      )}
 
       {/* Playing indicator */}
       {isPlaying && (

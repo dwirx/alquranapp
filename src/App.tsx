@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import SurahPage from "./pages/SurahPage";
 import ShalatPage from "./pages/ShalatPage";
+import BookmarkPage from "./pages/BookmarkPage";
+import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +23,8 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/surah/:id" element={<SurahPage />} />
             <Route path="/jadwal-shalat" element={<ShalatPage />} />
+            <Route path="/bookmark" element={<BookmarkPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

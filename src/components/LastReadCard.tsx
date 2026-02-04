@@ -6,7 +6,7 @@ interface LastReadItem {
   surahName: string;
   surahNameArabic: string;
   ayatNumber?: number;
-  timestamp?: string;
+  timestamp?: number;
 }
 
 interface LastReadCardProps {

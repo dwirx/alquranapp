@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSurahDetail, fetchTafsir } from "@/services/quranApi";
@@ -18,6 +18,9 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { useBookmarks } from "@/hooks/useBookmarks";
+import { useReadingHistory } from "@/hooks/useReadingHistory";
+import { useSettings } from "@/hooks/useSettings";
 
 const SurahPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +28,10 @@ const SurahPage = () => {
 
   const [currentAyat, setCurrentAyat] = useState<Ayat | null>(null);
   const [tafsirAyat, setTafsirAyat] = useState<number | null>(null);
+
+  const { isBookmarked, toggleBookmark } = useBookmarks();
+  const { addToHistory } = useReadingHistory();
+  const { settings } = useSettings();
 
   const { data: surah, isLoading, error, refetch } = useQuery({
     queryKey: ["surah", surahNumber],
@@ -60,6 +67,17 @@ const SurahPage = () => {
       setCurrentAyat(surah.ayat[prevIndex]);
     }
   }, [surah, currentAyat]);
+
+  // Add to reading history when surah is loaded
+  useEffect(() => {
+    if (surah) {
+      addToHistory({
+        surahNumber: surah.nomor,
+        surahName: surah.namaLatin,
+        surahNameArabic: surah.nama,
+      });
+    }
+  }, [surah?.nomor, addToHistory]);
 
   const currentTafsirText = tafsir?.tafsir.find(t => t.ayat === tafsirAyat)?.teks;
 
@@ -195,9 +213,23 @@ const SurahPage = () => {
             <AyatCard
               key={ayat.nomorAyat}
               ayat={ayat}
+              surahNumber={surah.nomor}
+              surahName={surah.namaLatin}
+              surahNameArabic={surah.nama}
               onPlayAudio={handlePlayAudio}
               isPlaying={currentAyat?.nomorAyat === ayat.nomorAyat}
               onShowTafsir={setTafsirAyat}
+              isBookmarked={isBookmarked(surah.nomor, ayat.nomorAyat)}
+              onToggleBookmark={() => toggleBookmark({
+                surahNumber: surah.nomor,
+                surahName: surah.namaLatin,
+                surahNameArabic: surah.nama,
+                ayatNumber: ayat.nomorAyat,
+                ayatText: ayat.teksIndonesia.substring(0, 100),
+              })}
+              showLatin={settings.showLatin}
+              showTranslation={settings.showTranslation}
+              fontSize={settings.fontSize}
             />
           ))}
         </div>

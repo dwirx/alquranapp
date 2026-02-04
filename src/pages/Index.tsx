@@ -9,20 +9,14 @@ import { ErrorMessage } from "@/components/ErrorMessage";
 import { BottomNav } from "@/components/BottomNav";
 import { LastReadCard, LastReadEmpty } from "@/components/LastReadCard";
 import { FilterTabs, FilterType } from "@/components/FilterTabs";
+import { useReadingHistory } from "@/hooks/useReadingHistory";
 import { Search } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-
-// Mock last read data - in real app this would come from localStorage or backend
-const MOCK_LAST_READ = [
-  { surahNumber: 2, surahName: "Al-Baqarah", surahNameArabic: "البقرة", ayatNumber: 255 },
-  { surahNumber: 9, surahName: "Al-Mutahanah", surahNameArabic: "الممتحنة", ayatNumber: 1 },
-  { surahNumber: 18, surahName: "Al-Kahf", surahNameArabic: "الكهف", ayatNumber: 10 },
-];
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterType>("sura");
-  const [lastRead] = useState(MOCK_LAST_READ);
+  const { history } = useReadingHistory();
   
   const { data: surahs, isLoading, error, refetch } = useQuery({
     queryKey: ["surahs"],
@@ -60,8 +54,8 @@ const Index = () => {
           
           <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex gap-3 pb-2">
-              {lastRead.length > 0 ? (
-                lastRead.map((item, index) => (
+              {history.length > 0 ? (
+                history.map((item, index) => (
                   <LastReadCard key={`${item.surahNumber}-${index}`} item={item} />
                 ))
               ) : (
