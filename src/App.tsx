@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import SurahPage from "./pages/SurahPage";
+import ShalatPage from "./pages/ShalatPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -19,6 +20,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/surah/:id" element={<SurahPage />} />
+            <Route path="/jadwal-shalat" element={<ShalatPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
