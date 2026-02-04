@@ -22,6 +22,7 @@ ATURAN PENTING:
 4. Jika tidak yakin atau tidak ada dalam konteks, katakan tidak tahu
 5. Jangan mengarang ayat atau hadits
 6. Gunakan bahasa yang sopan dan mudah dipahami
+7. Jawab dengan ringkas dan jelas
 
 ${SYSTEM_PROMPTS.xml}
 
@@ -38,6 +39,10 @@ export async function streamAiResponse(
   onComplete: () => void,
   onError: (error: Error) => void
 ): Promise<void> {
+  console.log("[AI API] Starting stream request...");
+  console.log("[AI API] URL:", NVIDIA_API_URL);
+  console.log("[AI API] Messages count:", messages.length);
+
   try {
     const response = await fetch(NVIDIA_API_URL, {
       method: "POST",
@@ -49,7 +54,7 @@ export async function streamAiResponse(
       body: JSON.stringify({
         model: "moonshotai/kimi-k2.5",
         messages: messages,
-        max_tokens: 16384,
+        max_tokens: 4096,
         temperature: 0.7,
         top_p: 0.95,
         stream: true,
@@ -57,22 +62,30 @@ export async function streamAiResponse(
       }),
     });
 
+    console.log("[AI API] Response status:", response.status);
+
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`API error: ${response.status} - ${errorText}`);
+      console.error("[AI API] Error response:", errorText);
+      throw new Error(`API error ${response.status}: ${errorText.substring(0, 200)}`);
     }
 
     const reader = response.body?.getReader();
     if (!reader) {
-      throw new Error("No response body");
+      throw new Error("No response body from API");
     }
 
     const decoder = new TextDecoder();
     let buffer = "";
+    let chunkCount = 0;
+    let contentReceived = false;
 
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        console.log("[AI API] Stream ended, total chunks:", chunkCount);
+        break;
+      }
 
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split("\n");
@@ -80,30 +93,53 @@ export async function streamAiResponse(
 
       for (const line of lines) {
         if (line.startsWith("data: ")) {
-          const data = line.slice(6);
+          const data = line.slice(6).trim();
           if (data === "[DONE]") {
+            console.log("[AI API] Received [DONE] signal");
             onComplete();
             return;
           }
 
           try {
             const parsed = JSON.parse(data);
-            const delta = parsed.choices?.[0]?.delta;
-            if (delta?.content) {
-              onChunk(delta.content);
+            const choice = parsed.choices?.[0];
+            const delta = choice?.delta;
+
+            if (delta) {
+              chunkCount++;
+
+              // Handle reasoning/thinking content
+              if (delta.reasoning_content) {
+                onChunk("", delta.reasoning_content);
+              }
+
+              // Handle actual content
+              if (delta.content) {
+                contentReceived = true;
+                onChunk(delta.content);
+              }
             }
-            if (delta?.reasoning_content) {
-              onChunk("", delta.reasoning_content);
+
+            // Check if finished
+            if (choice?.finish_reason) {
+              console.log("[AI API] Finish reason:", choice.finish_reason);
             }
-          } catch {
-            // Skip invalid JSON
+          } catch (parseError) {
+            // Skip invalid JSON lines
+            console.debug("[AI API] Skipping invalid JSON:", data.substring(0, 50));
           }
         }
       }
     }
 
+    if (!contentReceived) {
+      console.warn("[AI API] No content received, only reasoning");
+      onChunk("\n\n(AI sedang memproses, coba lagi jika tidak ada respons)");
+    }
+
     onComplete();
   } catch (error) {
+    console.error("[AI API] Stream error:", error);
     onError(error instanceof Error ? error : new Error(String(error)));
   }
 }
@@ -112,6 +148,8 @@ export async function streamAiResponse(
 export async function sendAiMessage(
   messages: ChatMessagePayload[]
 ): Promise<string> {
+  console.log("[AI API] Sending non-streaming request...");
+
   const response = await fetch(NVIDIA_API_URL, {
     method: "POST",
     headers: {
@@ -121,7 +159,7 @@ export async function sendAiMessage(
     body: JSON.stringify({
       model: "moonshotai/kimi-k2.5",
       messages: messages,
-      max_tokens: 16384,
+      max_tokens: 4096,
       temperature: 0.7,
       top_p: 0.95,
       stream: false,
@@ -129,9 +167,12 @@ export async function sendAiMessage(
   });
 
   if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
+    const errorText = await response.text();
+    throw new Error(`API error: ${response.status} - ${errorText}`);
   }
 
   const data = await response.json();
+  console.log("[AI API] Response received:", data.choices?.[0]?.finish_reason);
+
   return data.choices?.[0]?.message?.content || "";
 }
