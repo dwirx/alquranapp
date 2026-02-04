@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, BookOpen, Moon, Clock, Bookmark, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, BookOpen, Moon, Clock, Bookmark, Settings, ChevronLeft, ChevronRight, MessageSquareText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import faviconLogo from "/favicon.png";
 
 const navItems = [
   { path: "/", icon: Home, label: "Beranda" },
+  { path: "/chat", icon: MessageSquareText, label: "AI Chat" },
   { path: "/doa", icon: BookOpen, label: "Doa Harian" },
   { path: "/imsakiyah", icon: Moon, label: "Imsakiyah" },
   { path: "/jadwal-shalat", icon: Clock, label: "Waktu Shalat" },

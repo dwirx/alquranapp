@@ -1,11 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Clock, BookOpen, Settings, Moon } from "lucide-react";
+import { Home, Clock, BookOpen, Settings, MessageSquareText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { path: "/", icon: Home, label: "Beranda" },
+  { path: "/chat", icon: MessageSquareText, label: "AI Chat" },
   { path: "/doa", icon: BookOpen, label: "Doa" },
-  { path: "/imsakiyah", icon: Moon, label: "Imsakiyah" },
   { path: "/jadwal-shalat", icon: Clock, label: "Shalat" },
   { path: "/settings", icon: Settings, label: "Pengaturan" },
 ];

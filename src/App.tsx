@@ -10,6 +10,7 @@ import DoaPage from "./pages/DoaPage";
 import ImsakiyahPage from "./pages/ImsakiyahPage";
 import BookmarkPage from "./pages/BookmarkPage";
 import SettingsPage from "./pages/SettingsPage";
+import AiChatPage from "./pages/AiChatPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ function App() {
             <Route path="/jadwal-shalat" element={<ShalatPage />} />
             <Route path="/doa" element={<DoaPage />} />
             <Route path="/imsakiyah" element={<ImsakiyahPage />} />
+            <Route path="/chat" element={<AiChatPage />} />
             <Route path="/bookmark" element={<BookmarkPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFound />} />
