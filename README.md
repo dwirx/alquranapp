@@ -1,73 +1,104 @@
-# Welcome to your Lovable project
+# 📖 Al-Quran Digital Indonesia
 
-## Project info
+Aplikasi Al-Quran digital berbahasa Indonesia dengan fitur lengkap untuk membaca, mendengarkan, dan memahami Al-Quran. Dilengkapi dengan jadwal shalat berdasarkan lokasi.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+![Al-Quran Digital](public/og-image.png)
 
-## How can I edit this code?
+## ✨ Fitur Utama
 
-There are several ways of editing your application.
+### 📚 Al-Quran
+- **114 Surah lengkap** dengan teks Arab, latin, dan terjemahan Indonesia
+- **Audio murottal** per surah dari qari terkenal
+- **Tafsir** untuk memahami makna ayat
+- **Bookmark ayat** favorit untuk dibaca kembali
+- **Riwayat bacaan** otomatis tersimpan
 
-**Use Lovable**
+### 🕌 Jadwal Shalat
+- Waktu shalat akurat berdasarkan **lokasi GPS**
+- Mendukung **100+ kota** di Indonesia
+- Tampilan waktu shalat berikutnya
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### ⚙️ Pengaturan
+- **Mode gelap/terang** untuk kenyamanan membaca
+- **Ukuran font** yang dapat disesuaikan (kecil, sedang, besar)
+- Opsi tampilkan/sembunyikan **teks latin**
+- Opsi tampilkan/sembunyikan **terjemahan**
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Teknologi
 
-**Use your preferred IDE**
+- **React 18** - UI Library
+- **TypeScript** - Type Safety
+- **Vite** - Build Tool
+- **Tailwind CSS** - Styling
+- **shadcn/ui** - UI Components
+- **React Query** - Data Fetching
+- **React Router** - Navigation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 📡 Sumber Data
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Al-Quran API**: [eQuran.id API v2](https://equran.id/apidev)
+- **Jadwal Shalat API**: [MyQuran API](https://api.myquran.com/)
 
-Follow these steps:
+## 🚀 Menjalankan Proyek
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Prasyarat
+- Node.js 18+ atau Bun
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Instalasi
 
-# Step 3: Install the necessary dependencies.
-npm i
+```bash
+# Clone repository
+git clone <repository-url>
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Masuk ke direktori proyek
+cd al-quran-digital
+
+# Install dependencies
+npm install
+# atau
+bun install
+
+# Jalankan development server
 npm run dev
+# atau
+bun dev
 ```
 
-**Edit a file directly in GitHub**
+Aplikasi akan berjalan di `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📁 Struktur Proyek
 
-**Use GitHub Codespaces**
+```
+src/
+├── components/        # Komponen UI
+│   ├── ui/           # shadcn/ui components
+│   ├── AyatCard.tsx  # Kartu ayat
+│   ├── SurahCard.tsx # Kartu surah
+│   ├── BottomNav.tsx # Navigasi bawah
+│   └── ...
+├── hooks/            # Custom React hooks
+│   ├── useBookmarks.ts
+│   ├── useSettings.ts
+│   └── ...
+├── pages/            # Halaman aplikasi
+│   ├── Index.tsx     # Beranda
+│   ├── SurahPage.tsx # Detail surah
+│   ├── ShalatPage.tsx
+│   └── ...
+├── services/         # API services
+│   ├── quranApi.ts
+│   └── shalatApi.ts
+└── types/            # TypeScript types
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📱 Tampilan
 
-## What technologies are used for this project?
+Aplikasi didesain dengan pendekatan **mobile-first** untuk pengalaman terbaik di perangkat mobile, namun tetap responsif di desktop.
 
-This project is built with:
+## 📄 Lisensi
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+MIT License - Silakan gunakan dan modifikasi sesuai kebutuhan.
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+**Dibuat dengan ❤️ menggunakan [Lovable](https://lovable.dev)**
