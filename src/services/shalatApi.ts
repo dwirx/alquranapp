@@ -1,51 +1,69 @@
-import { ApiResponse, ShalatCity, ShalatScheduleDaily, ShalatScheduleMonthly } from "@/types/shalat";
+import { ApiResponse, ShalatScheduleMonthly } from "@/types/shalat";
 
 const BASE_URL = "https://equran.id/api/v2/shalat";
 
-export async function fetchShalatCities(): Promise<ShalatCity[]> {
-  const response = await fetch(`${BASE_URL}/kota/semua`);
+/**
+ * Mengambil daftar semua provinsi yang memiliki data jadwal shalat
+ * GET /api/v2/shalat/provinsi
+ */
+export async function fetchProvinsi(): Promise<string[]> {
+  const response = await fetch(`${BASE_URL}/provinsi`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch provinces");
+  }
+  const data: ApiResponse<string[]> = await response.json();
+  return data.data;
+}
+
+/**
+ * Mengambil daftar kabupaten/kota berdasarkan provinsi
+ * POST /api/v2/shalat/kabkota
+ */
+export async function fetchKabKota(provinsi: string): Promise<string[]> {
+  const response = await fetch(`${BASE_URL}/kabkota`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ provinsi }),
+  });
   if (!response.ok) {
     throw new Error("Failed to fetch cities");
   }
-  const data: ApiResponse<ShalatCity[]> = await response.json();
+  const data: ApiResponse<string[]> = await response.json();
   return data.data;
 }
 
-export async function fetchShalatScheduleDaily(
-  cityId: string,
-  year: number,
-  month: number,
-  day: number
-): Promise<ShalatScheduleDaily> {
-  const monthStr = month.toString().padStart(2, "0");
-  const dayStr = day.toString().padStart(2, "0");
-  const response = await fetch(`${BASE_URL}/jadwal/${cityId}/${year}/${monthStr}/${dayStr}`);
-  if (!response.ok) {
-    throw new Error("Failed to fetch daily prayer schedule");
-  }
-  const data: ApiResponse<ShalatScheduleDaily> = await response.json();
-  return data.data;
-}
-
+/**
+ * Mengambil jadwal shalat bulanan untuk kabupaten/kota tertentu
+ * POST /api/v2/shalat
+ */
 export async function fetchShalatScheduleMonthly(
-  cityId: string,
-  year: number,
-  month: number
+  provinsi: string,
+  kabkota: string,
+  bulan?: number,
+  tahun?: number
 ): Promise<ShalatScheduleMonthly> {
-  const monthStr = month.toString().padStart(2, "0");
-  const response = await fetch(`${BASE_URL}/jadwal/${cityId}/${year}/${monthStr}`);
-  if (!response.ok) {
-    throw new Error("Failed to fetch monthly prayer schedule");
-  }
-  const data: ApiResponse<ShalatScheduleMonthly> = await response.json();
-  return data.data;
-}
+  const now = new Date();
+  const requestBody = {
+    provinsi,
+    kabkota,
+    bulan: bulan ?? now.getMonth() + 1,
+    tahun: tahun ?? now.getFullYear(),
+  };
 
-export async function searchShalatCity(keyword: string): Promise<ShalatCity[]> {
-  const response = await fetch(`${BASE_URL}/kota/cari/${encodeURIComponent(keyword)}`);
+  const response = await fetch(BASE_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
+  });
+
   if (!response.ok) {
-    throw new Error("Failed to search cities");
+    throw new Error("Failed to fetch prayer schedule");
   }
-  const data: ApiResponse<ShalatCity[]> = await response.json();
+
+  const data: ApiResponse<ShalatScheduleMonthly> = await response.json();
   return data.data;
 }

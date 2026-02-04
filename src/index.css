@@ -1,13 +1,13 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @import "@fontsource/amiri/400.css";
 @import "@fontsource/amiri/700.css";
 @import "@fontsource/lora/400.css";
 @import "@fontsource/lora/500.css";
 @import "@fontsource/lora/600.css";
 @import "@fontsource/lora/700.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Al-Quran Website Design System
    Islamic-inspired color palette with warm earth tones

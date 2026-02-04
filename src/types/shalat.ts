@@ -1,12 +1,9 @@
-// Types for eQuran.id Shalat/Prayer Times API
-
-export interface ShalatCity {
-  id: string;
-  lokasi: string;
-}
+// Types for eQuran.id Shalat/Prayer Times API v2 (2026)
 
 export interface ShalatJadwal {
-  tanggal: string;
+  tanggal: number; // day of month
+  tanggal_lengkap: string; // YYYY-MM-DD
+  hari: string; // day name in Indonesian
   imsak: string;
   subuh: string;
   terbit: string;
@@ -15,26 +12,14 @@ export interface ShalatJadwal {
   ashar: string;
   maghrib: string;
   isya: string;
-  date?: string;
-}
-
-export interface ShalatScheduleDaily {
-  id: string;
-  lokasi: string;
-  daerah: string;
-  jadwal: ShalatJadwal;
 }
 
 export interface ShalatScheduleMonthly {
-  id: string;
-  lokasi: string;
-  daerah: string;
-  koordinat: {
-    lat: number;
-    lon: number;
-    lintang: string;
-    bujur: string;
-  };
+  provinsi: string;
+  kabkota: string;
+  bulan: number;
+  tahun: number;
+  bulan_nama: string;
   jadwal: ShalatJadwal[];
 }
 
