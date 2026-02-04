@@ -1,6 +1,9 @@
 import { SYSTEM_PROMPTS } from "quran-validator";
 
-const NVIDIA_API_URL = import.meta.env.VITE_NVIDIA_API_URL;
+// Use proxy in development, direct URL in production
+const NVIDIA_API_URL = import.meta.env.DEV
+  ? "/api/nvidia/v1/chat/completions"
+  : import.meta.env.VITE_NVIDIA_API_URL;
 const NVIDIA_API_KEY = import.meta.env.VITE_NVIDIA_API_KEY;
 
 export interface ChatMessagePayload {
@@ -55,7 +58,8 @@ export async function streamAiResponse(
     });
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`API error: ${response.status} - ${errorText}`);
     }
 
     const reader = response.body?.getReader();
