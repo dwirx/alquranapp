@@ -5,10 +5,10 @@ import { fetchSurahDetail, fetchTafsir } from "@/services/quranApi";
 import { Header } from "@/components/Header";
 import { AyatCard } from "@/components/AyatCard";
 import { AudioPlayer } from "@/components/AudioPlayer";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { AyatCardSkeleton } from "@/components/Skeletons";
 import { ErrorMessage } from "@/components/ErrorMessage";
 import { Ayat } from "@/types/quran";
-import { ArrowLeft, ArrowRight, BookOpen, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import { BookOpen, MapPin, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 const SurahPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -66,7 +67,23 @@ const SurahPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <LoadingSpinner message="Memuat surah..." />
+        <main className="container py-4 sm:py-6">
+          <div className="mb-6">
+            <div className="h-4 w-32 bg-muted rounded shimmer mb-4" />
+            <div className="islamic-border bg-card p-4 sm:p-6 md:p-8">
+              <div className="text-center space-y-3">
+                <div className="h-10 w-32 mx-auto bg-muted rounded shimmer" />
+                <div className="h-6 w-24 mx-auto bg-muted rounded shimmer" />
+                <div className="h-4 w-40 mx-auto bg-muted rounded shimmer" />
+              </div>
+            </div>
+          </div>
+          <div className="space-y-3 sm:space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <AyatCardSkeleton key={i} />
+            ))}
+          </div>
+        </main>
       </div>
     );
   }
@@ -90,37 +107,37 @@ const SurahPage = () => {
     : -1;
 
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className={`min-h-screen bg-background ${currentAyat ? 'pb-36 sm:pb-40' : 'pb-8'}`}>
       <Header />
 
-      <main className="container py-6">
+      <main className="container py-4 sm:py-6">
         {/* Back Link */}
         <Link 
           to="/" 
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors touch-target"
         >
           <ArrowLeft className="h-4 w-4" />
-          Kembali ke Daftar Surah
+          <span>Kembali</span>
         </Link>
 
         {/* Surah Header */}
-        <div className="islamic-border bg-card p-6 md:p-8 mb-6">
+        <div className="islamic-border bg-card p-4 sm:p-6 md:p-8 mb-4 sm:mb-6">
           <div className="text-center">
-            <h1 className="surah-name-arabic text-3xl md:text-4xl mb-2">
+            <h1 className="surah-name-arabic text-2xl sm:text-3xl md:text-4xl mb-2">
               {surah.nama}
             </h1>
-            <h2 className="text-2xl font-bold text-foreground mb-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
               {surah.namaLatin}
             </h2>
-            <p className="text-muted-foreground mb-4">{surah.arti}</p>
+            <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4">{surah.arti}</p>
             
-            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <BookOpen className="h-4 w-4" />
+            <div className="flex items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted">
+                <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 {surah.jumlahAyat} Ayat
               </span>
-              <span className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted">
+                <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 {surah.tempatTurun}
               </span>
             </div>
@@ -129,20 +146,20 @@ const SurahPage = () => {
           {/* Surah Description */}
           {surah.deskripsi && (
             <div 
-              className="mt-6 pt-6 border-t border-border text-sm text-muted-foreground leading-relaxed"
+              className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border text-xs sm:text-sm text-muted-foreground leading-relaxed [&>i]:font-medium [&>i]:text-foreground"
               dangerouslySetInnerHTML={{ __html: surah.deskripsi }}
             />
           )}
         </div>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between gap-2 mb-4 sm:mb-6">
           {surah.suratSebelumnya ? (
             <Link to={`/surah/${surah.suratSebelumnya.nomor}`}>
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" size="sm" className="gap-1.5 sm:gap-2 h-9 sm:h-10 text-xs sm:text-sm touch-target">
                 <ChevronLeft className="h-4 w-4" />
-                <span className="hidden sm:inline">{surah.suratSebelumnya.namaLatin}</span>
-                <span className="sm:hidden">Sebelumnya</span>
+                <span className="hidden sm:inline max-w-24 truncate">{surah.suratSebelumnya.namaLatin}</span>
+                <span className="sm:hidden">Prev</span>
               </Button>
             </Link>
           ) : (
@@ -151,9 +168,9 @@ const SurahPage = () => {
           
           {surah.suratSelanjutnya && (
             <Link to={`/surah/${surah.suratSelanjutnya.nomor}`}>
-              <Button variant="outline" className="gap-2">
-                <span className="hidden sm:inline">{surah.suratSelanjutnya.namaLatin}</span>
-                <span className="sm:hidden">Selanjutnya</span>
+              <Button variant="outline" size="sm" className="gap-1.5 sm:gap-2 h-9 sm:h-10 text-xs sm:text-sm touch-target">
+                <span className="hidden sm:inline max-w-24 truncate">{surah.suratSelanjutnya.namaLatin}</span>
+                <span className="sm:hidden">Next</span>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -162,15 +179,18 @@ const SurahPage = () => {
 
         {/* Bismillah (if not Al-Fatihah or At-Taubah) */}
         {surahNumber !== 1 && surahNumber !== 9 && (
-          <div className="text-center py-8 mb-6">
+          <div className="text-center py-6 sm:py-8 mb-4 sm:mb-6 rounded-xl bg-card border border-border">
             <p className="arabic-text-lg text-quran-gold">
               بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ
+            </p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-2">
+              Dengan nama Allah Yang Maha Pengasih, Maha Penyayang
             </p>
           </div>
         )}
 
         {/* Ayat List */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {surah.ayat.map((ayat) => (
             <AyatCard
               key={ayat.nomorAyat}
@@ -185,14 +205,16 @@ const SurahPage = () => {
 
       {/* Floating Audio Player */}
       {currentAyat && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-lg border-t border-border">
-          <div className="container">
+        <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 glass-effect border-t border-border z-50">
+          <div className="container max-w-4xl mx-auto">
             <AudioPlayer
               ayat={currentAyat}
+              surahName={surah.namaLatin}
               onNext={handleNextAyat}
               onPrevious={handlePreviousAyat}
               hasNext={currentAyatIndex < surah.ayat.length - 1}
               hasPrevious={currentAyatIndex > 0}
+              onClose={() => setCurrentAyat(null)}
             />
           </div>
         </div>
@@ -200,14 +222,16 @@ const SurahPage = () => {
 
       {/* Tafsir Modal */}
       <Dialog open={tafsirAyat !== null} onOpenChange={() => setTafsirAyat(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogContent className="max-w-2xl max-h-[85vh] sm:max-h-[80vh] mx-4 sm:mx-auto">
           <DialogHeader>
-            <DialogTitle>Tafsir Ayat {tafsirAyat}</DialogTitle>
+            <DialogTitle className="text-base sm:text-lg">
+              Tafsir {surah.namaLatin} Ayat {tafsirAyat}
+            </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="max-h-[60vh] pr-4">
+          <ScrollArea className="max-h-[60vh] sm:max-h-[55vh] pr-4">
             {currentTafsirText ? (
               <div 
-                className="text-sm leading-relaxed"
+                className="text-xs sm:text-sm leading-relaxed [&>p]:mb-3"
                 dangerouslySetInnerHTML={{ __html: currentTafsirText }}
               />
             ) : (
