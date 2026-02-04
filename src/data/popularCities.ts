@@ -1,6 +1,6 @@
 // Popular cities in Indonesia for quick access
 export const POPULAR_CITIES = [
-  { provinsi: "DKI Jakarta", kabkota: "Kota Jakarta Selatan", lat: -6.2615, lon: 106.8106 },
+  { provinsi: "DKI Jakarta", kabkota: "Kota Jakarta", lat: -6.2088, lon: 106.8456 },
   { provinsi: "Jawa Barat", kabkota: "Kota Bandung", lat: -6.9175, lon: 107.6191 },
   { provinsi: "Jawa Timur", kabkota: "Kota Surabaya", lat: -7.2575, lon: 112.7521 },
   { provinsi: "Jawa Tengah", kabkota: "Kota Semarang", lat: -6.9932, lon: 110.4203 },

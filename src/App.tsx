@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import SurahPage from "./pages/SurahPage";
 import ShalatPage from "./pages/ShalatPage";
+import DoaPage from "./pages/DoaPage";
 import BookmarkPage from "./pages/BookmarkPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
@@ -28,6 +29,7 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/surah/:id" element={<SurahPage />} />
             <Route path="/jadwal-shalat" element={<ShalatPage />} />
+            <Route path="/doa" element={<DoaPage />} />
             <Route path="/bookmark" element={<BookmarkPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFound />} />
