@@ -5,8 +5,7 @@ import {
   fetchKabKotaImsakiyah,
   fetchImsakiyah,
 } from "@/services/imsakiyahApi";
-import { Header } from "@/components/Header";
-import { BottomNav } from "@/components/BottomNav";
+import { ResponsiveLayout } from "@/components/layout";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ErrorMessage } from "@/components/ErrorMessage";
 import { TodayImsakiyahCard } from "@/components/TodayImsakiyahCard";
@@ -154,10 +153,8 @@ const ImsakiyahPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-20 md:pb-0">
-      <Header />
-
-      <main className="container flex-1 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 space-y-6 sm:space-y-8">
+    <ResponsiveLayout>
+      <div className="container px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 space-y-6 sm:space-y-8">
         {/* Hero Section */}
         <div className="relative overflow-hidden rounded-2xl lg:rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6 sm:p-8 lg:p-10 border-2 border-primary/20 shadow-xl shadow-primary/5">
           <div className="absolute top-0 right-0 w-40 h-40 sm:w-56 sm:h-56 lg:w-72 lg:h-72 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
@@ -379,34 +376,8 @@ const ImsakiyahPage = () => {
             </div>
           </div>
         ) : null}
-      </main>
-
-      {/* Footer - hidden on mobile */}
-      <footer className="hidden md:block border-t border-border bg-card/50 backdrop-blur-sm mt-auto">
-        <div className="container py-6 px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-            <p className="text-sm text-muted-foreground">
-              © 2026 Al-Quran Digital Indonesia
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Sumber data:{" "}
-              <a
-                href="https://equran.id"
-                className="text-primary hover:underline font-semibold transition-colors duration-200"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                eQuran.id
-              </a>{" "}
-              • Kementerian Agama RI
-            </p>
-          </div>
-        </div>
-      </footer>
-
-      {/* Bottom Navigation - mobile only */}
-      <BottomNav />
-    </div>
+      </div>
+    </ResponsiveLayout>
   );
 };
 

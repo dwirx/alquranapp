@@ -14,7 +14,7 @@ export function BottomNav() {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
       {/* Background with blur */}
       <div className="absolute inset-0 bg-card/95 backdrop-blur-lg border-t border-border" />
       

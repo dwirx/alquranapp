@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { BookMarked, Trash2, BookOpen } from "lucide-react";
-import { BottomNav } from "@/components/BottomNav";
+import { ResponsiveLayout } from "@/components/layout";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,9 +9,9 @@ const BookmarkPage = () => {
   const { bookmarks, removeBookmark } = useBookmarks();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-20 md:pb-0">
+    <ResponsiveLayout>
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-lg border-b border-border">
+      <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-lg border-b border-border lg:hidden">
         <div className="container py-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-primary/10">
@@ -27,7 +27,24 @@ const BookmarkPage = () => {
         </div>
       </header>
 
-      <main className="container flex-1 py-4 sm:py-6">
+      {/* Desktop Header */}
+      <div className="hidden lg:block border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+        <div className="container py-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-primary/10">
+              <BookMarked className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">Bookmark</h1>
+              <p className="text-sm text-muted-foreground">
+                {bookmarks.length} ayat tersimpan
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container py-4 sm:py-6">
         {bookmarks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="p-4 rounded-2xl bg-muted/50 mb-4">
@@ -46,7 +63,7 @@ const BookmarkPage = () => {
             </Link>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
             {bookmarks.map((bookmark) => (
               <div
                 key={`${bookmark.surahNumber}-${bookmark.ayatNumber}`}
@@ -103,10 +120,8 @@ const BookmarkPage = () => {
             ))}
           </div>
         )}
-      </main>
-
-      <BottomNav />
-    </div>
+      </div>
+    </ResponsiveLayout>
   );
 };
 

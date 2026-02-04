@@ -1,11 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchProvinsi, fetchKabKota, fetchShalatScheduleMonthly } from "@/services/shalatApi";
-import { Header } from "@/components/Header";
+import { ResponsiveLayout } from "@/components/layout";
 import { TodayPrayerCard } from "@/components/TodayPrayerCard";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ErrorMessage } from "@/components/ErrorMessage";
-import { BottomNav } from "@/components/BottomNav";
 import { MapPin, Clock, ChevronDown, Navigation, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -223,10 +222,8 @@ const ShalatPage = () => {
   }));
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-20 md:pb-0">
-      <Header />
-
-      <main className="container flex-1 py-4 sm:py-6 md:py-8 space-y-4 sm:space-y-6">
+    <ResponsiveLayout>
+      <div className="container py-4 sm:py-6 md:py-8 space-y-4 sm:space-y-6">
         {/* Hero Section */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background p-4 sm:p-6 md:p-8 border border-primary/20">
           <div className="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
@@ -236,7 +233,7 @@ const ShalatPage = () => {
             <div className="flex items-start justify-between flex-wrap gap-4">
               <div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">
-                  🕌 Jadwal Shalat
+                  Jadwal Shalat
                 </h1>
                 <p className="text-sm sm:text-base text-muted-foreground max-w-md">
                   Waktu shalat akurat untuk seluruh wilayah Indonesia
@@ -548,33 +545,8 @@ const ShalatPage = () => {
             </div>
           </div>
         </div>
-      </main>
-
-      {/* Footer - hidden on mobile */}
-      <footer className="hidden md:block border-t border-border bg-card/50 backdrop-blur-sm mt-auto">
-        <div className="container py-4 sm:py-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              © 2026 Al-Quran Digital Indonesia
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Sumber data:{" "}
-              <a
-                href="https://equran.id"
-                className="text-primary hover:underline font-medium"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                eQuran.id
-              </a>
-            </p>
-          </div>
-        </div>
-      </footer>
-
-      {/* Bottom Navigation - mobile only */}
-      <BottomNav />
-    </div>
+      </div>
+    </ResponsiveLayout>
   );
 };
 
