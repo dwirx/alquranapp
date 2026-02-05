@@ -377,4 +377,19 @@
   .bg-quran-gold {
     background-color: hsl(var(--quran-gold));
   }
+
+  /* Chat prose styling */
+  .prose-chat {
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: inherit;
+  }
+
+  .prose-chat > *:first-child {
+    margin-top: 0;
+  }
+
+  .prose-chat > *:last-child {
+    margin-bottom: 0;
+  }
 }
