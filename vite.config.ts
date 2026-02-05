@@ -11,25 +11,6 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
-    proxy: {
-      // Proxy NVIDIA API to avoid CORS issues
-      "/api/nvidia": {
-        target: "https://integrate.api.nvidia.com",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/nvidia/, ""),
-        secure: true,
-        timeout: 120000, // 2 minutes for slow AI responses
-        proxyTimeout: 120000,
-        configure: (proxy) => {
-          proxy.on("error", (err) => {
-            console.log("[Proxy Error]", err);
-          });
-          proxy.on("proxyReq", (_proxyReq, req) => {
-            console.log("[Proxy Request]", req.method, req.url);
-          });
-        },
-      },
-    },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {

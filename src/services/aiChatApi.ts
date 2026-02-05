@@ -1,10 +1,9 @@
 import { SYSTEM_PROMPTS } from "quran-validator";
 
-// Use proxy in development, direct URL in production
-const NVIDIA_API_URL = import.meta.env.DEV
-  ? "/api/nvidia/v1/chat/completions"
-  : import.meta.env.VITE_NVIDIA_API_URL;
-const NVIDIA_API_KEY = import.meta.env.VITE_NVIDIA_API_KEY;
+// OpenRouter API configuration
+const OPENROUTER_API_URL = import.meta.env.VITE_OPENROUTER_API_URL || "https://openrouter.ai/api/v1/chat/completions";
+const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
+const OPENROUTER_MODEL = import.meta.env.VITE_OPENROUTER_MODEL || "openai/gpt-4.1-mini";
 
 export interface ChatMessagePayload {
   role: "system" | "user" | "assistant";
@@ -40,26 +39,26 @@ export async function streamAiResponse(
   onError: (error: Error) => void
 ): Promise<void> {
   console.log("[AI API] Starting stream request...");
-  console.log("[AI API] URL:", NVIDIA_API_URL);
+  console.log("[AI API] URL:", OPENROUTER_API_URL);
+  console.log("[AI API] Model:", OPENROUTER_MODEL);
   console.log("[AI API] Messages count:", messages.length);
 
   try {
-    const response = await fetch(NVIDIA_API_URL, {
+    const response = await fetch(OPENROUTER_API_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${NVIDIA_API_KEY}`,
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
-        Accept: "text/event-stream",
+        "HTTP-Referer": window.location.origin,
+        "X-Title": "Al-Quran App",
       },
       body: JSON.stringify({
-        model: "moonshotai/kimi-k2.5",
+        model: OPENROUTER_MODEL,
         messages: messages,
-        max_tokens: 8192,
+        max_tokens: 4096,
         temperature: 0.7,
         top_p: 0.95,
         stream: true,
-        // Disable thinking mode for faster responses
-        // chat_template_kwargs: { thinking: true },
       }),
     });
 
@@ -109,11 +108,6 @@ export async function streamAiResponse(
             if (delta) {
               chunkCount++;
 
-              // Handle reasoning/thinking content
-              if (delta.reasoning_content) {
-                onChunk("", delta.reasoning_content);
-              }
-
               // Handle actual content
               if (delta.content) {
                 contentReceived = true;
@@ -134,7 +128,7 @@ export async function streamAiResponse(
     }
 
     if (!contentReceived) {
-      console.warn("[AI API] No content received, only reasoning");
+      console.warn("[AI API] No content received");
       onChunk("\n\n(AI sedang memproses, coba lagi jika tidak ada respons)");
     }
 
@@ -151,14 +145,16 @@ export async function sendAiMessage(
 ): Promise<string> {
   console.log("[AI API] Sending non-streaming request...");
 
-  const response = await fetch(NVIDIA_API_URL, {
+  const response = await fetch(OPENROUTER_API_URL, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${NVIDIA_API_KEY}`,
+      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
       "Content-Type": "application/json",
+      "HTTP-Referer": window.location.origin,
+      "X-Title": "Al-Quran App",
     },
     body: JSON.stringify({
-      model: "moonshotai/kimi-k2.5",
+      model: OPENROUTER_MODEL,
       messages: messages,
       max_tokens: 4096,
       temperature: 0.7,
