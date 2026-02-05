@@ -11,9 +11,9 @@ interface ChatContextType {
   isLoading: boolean;
   isReady: boolean;
   createSession: () => Promise<ChatSession>;
-  addMessage: (message: ChatMessage) => Promise<void>;
-  updateLastMessage: (content: string, thinking?: string) => void;
-  completeStreaming: () => Promise<void>;
+  addMessage: (message: ChatMessage, sessionId?: string) => Promise<void>;
+  updateLastMessage: (content: string, thinking?: string, sessionId?: string) => void;
+  completeStreaming: (sessionId?: string) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   clearAllHistory: () => Promise<void>;
   switchSession: (sessionId: string) => Promise<void>;

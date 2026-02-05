@@ -54,20 +54,28 @@ const ChatContainer = () => {
       session = await createSession();
     }
 
+    // Capture the session ID to use consistently throughout this request
+    // This prevents race conditions with async state updates
+    const sessionId = session.id;
+
     // Reset state
     setStatus("searching");
     setThinkingContent("");
     setErrorMessage("");
     setLastQuestion(content);
 
-    // Add user message
+    // Capture chat history BEFORE adding the new user message
+    // Use session.messages which is the most up-to-date from state or newly created session
+    const chatHistory = session?.messages || [];
+
+    // Add user message with explicit session ID
     const userMessage: ChatMessageType = {
       id: crypto.randomUUID(),
       role: "user",
       content,
       timestamp: Date.now(),
     };
-    await addMessage(userMessage);
+    await addMessage(userMessage, sessionId);
 
     try {
       // Step 1: Vector search for relevant ayat
@@ -89,8 +97,8 @@ const ChatContainer = () => {
       setStatus("thinking");
 
       // Step 2: Prepare messages for LLM
+      // Use the captured chatHistory which contains messages from the correct session
       const systemPrompt = getSystemPrompt(context);
-      const chatHistory = currentSession?.messages || [];
 
       const llmMessages: ChatMessagePayload[] = [
         { role: "system", content: systemPrompt },
@@ -101,7 +109,7 @@ const ChatContainer = () => {
         { role: "user", content },
       ];
 
-      // Step 3: Add placeholder assistant message
+      // Step 3: Add placeholder assistant message with explicit session ID
       const assistantMessage: ChatMessageType = {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -109,7 +117,7 @@ const ChatContainer = () => {
         timestamp: Date.now(),
         isStreaming: true,
       };
-      await addMessage(assistantMessage);
+      await addMessage(assistantMessage, sessionId);
 
       console.log("[AI Chat] Sending to LLM with model:", selectedModel);
 
@@ -128,13 +136,13 @@ const ChatContainer = () => {
               setStatus("generating");
               hasContent = true;
             }
-            updateLastMessage(chunk);
+            updateLastMessage(chunk, undefined, sessionId);
           }
         },
         () => {
           console.log("[AI Chat] Response complete");
           abortControllerRef.current = null;
-          completeStreaming();
+          completeStreaming(sessionId);
           setStatus("idle");
           setThinkingContent("");
           toast.success("Jawaban selesai");
@@ -147,7 +155,7 @@ const ChatContainer = () => {
           console.error("[AI Chat] Error:", error);
           setStatus("error");
           setErrorMessage(error.message || "Gagal mendapatkan respons dari AI");
-          completeStreaming();
+          completeStreaming(sessionId);
         },
         abortControllerRef.current.signal
       );
