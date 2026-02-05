@@ -113,13 +113,25 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
             );
           }
           if (segment.type === "shalat") {
-            return <ShalatCard key={index} />;
+            return (
+              <ShalatCard
+                key={index}
+                provinsi={segment.provinsi}
+                kabkota={segment.kabkota}
+              />
+            );
           }
           if (segment.type === "doa") {
             return <DoaCard key={index} query={segment.query || ""} />;
           }
           if (segment.type === "imsakiyah") {
-            return <ImsakiyahCard key={index} />;
+            return (
+              <ImsakiyahCard
+                key={index}
+                provinsi={segment.provinsi}
+                kabkota={segment.kabkota}
+              />
+            );
           }
           return (
             <div key={index} className="prose-chat">

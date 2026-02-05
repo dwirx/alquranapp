@@ -1,24 +1,111 @@
 import { Link } from "react-router-dom";
-import { Clock, MapPin, ExternalLink, Loader2 } from "lucide-react";
+import { MapPin, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { fetchShalatScheduleMonthly } from "@/services/shalatApi";
+import { fetchShalatScheduleMonthly, fetchProvinsi, fetchKabKota } from "@/services/shalatApi";
 import { PRAYER_ICONS } from "@/types/shalat";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 interface ShalatCardProps {
+  provinsi?: string;
+  kabkota?: string;
   className?: string;
 }
 
-const ShalatCard = ({ className }: ShalatCardProps) => {
-  // Get saved location from localStorage or use default
-  const savedProvinsi = localStorage.getItem("shalat_provinsi") || "DKI JAKARTA";
-  const savedKabkota = localStorage.getItem("shalat_kabkota") || "KOTA JAKARTA PUSAT";
+// Map common city names to their official kabkota names
+const CITY_ALIASES: Record<string, { provinsi: string; kabkota: string }> = {
+  "malang": { provinsi: "JAWA TIMUR", kabkota: "KABUPATEN MALANG" },
+  "kota malang": { provinsi: "JAWA TIMUR", kabkota: "KOTA MALANG" },
+  "kabupaten malang": { provinsi: "JAWA TIMUR", kabkota: "KABUPATEN MALANG" },
+  "kab malang": { provinsi: "JAWA TIMUR", kabkota: "KABUPATEN MALANG" },
+  "surabaya": { provinsi: "JAWA TIMUR", kabkota: "KOTA SURABAYA" },
+  "jakarta": { provinsi: "DKI JAKARTA", kabkota: "KOTA JAKARTA PUSAT" },
+  "jakarta pusat": { provinsi: "DKI JAKARTA", kabkota: "KOTA JAKARTA PUSAT" },
+  "jakarta selatan": { provinsi: "DKI JAKARTA", kabkota: "KOTA JAKARTA SELATAN" },
+  "jakarta barat": { provinsi: "DKI JAKARTA", kabkota: "KOTA JAKARTA BARAT" },
+  "jakarta timur": { provinsi: "DKI JAKARTA", kabkota: "KOTA JAKARTA TIMUR" },
+  "jakarta utara": { provinsi: "DKI JAKARTA", kabkota: "KOTA JAKARTA UTARA" },
+  "bandung": { provinsi: "JAWA BARAT", kabkota: "KOTA BANDUNG" },
+  "semarang": { provinsi: "JAWA TENGAH", kabkota: "KOTA SEMARANG" },
+  "yogyakarta": { provinsi: "DI YOGYAKARTA", kabkota: "KOTA YOGYAKARTA" },
+  "jogja": { provinsi: "DI YOGYAKARTA", kabkota: "KOTA YOGYAKARTA" },
+  "medan": { provinsi: "SUMATERA UTARA", kabkota: "KOTA MEDAN" },
+  "makassar": { provinsi: "SULAWESI SELATAN", kabkota: "KOTA MAKASSAR" },
+  "palembang": { provinsi: "SUMATERA SELATAN", kabkota: "KOTA PALEMBANG" },
+  "denpasar": { provinsi: "BALI", kabkota: "KOTA DENPASAR" },
+  "bali": { provinsi: "BALI", kabkota: "KOTA DENPASAR" },
+  "bekasi": { provinsi: "JAWA BARAT", kabkota: "KOTA BEKASI" },
+  "tangerang": { provinsi: "BANTEN", kabkota: "KOTA TANGERANG" },
+  "depok": { provinsi: "JAWA BARAT", kabkota: "KOTA DEPOK" },
+  "bogor": { provinsi: "JAWA BARAT", kabkota: "KOTA BOGOR" },
+};
+
+const ShalatCard = ({ provinsi: propProvinsi, kabkota: propKabkota, className }: ShalatCardProps) => {
+  const [resolvedLocation, setResolvedLocation] = useState<{ provinsi: string; kabkota: string } | null>(null);
+  const [isResolving, setIsResolving] = useState(false);
+
+  // Resolve location from props or localStorage
+  useEffect(() => {
+    const resolveLocation = async () => {
+      // If props provided, try to resolve them
+      if (propKabkota || propProvinsi) {
+        setIsResolving(true);
+
+        // Check aliases first
+        const searchKey = (propKabkota || propProvinsi || "").toLowerCase().trim();
+        if (CITY_ALIASES[searchKey]) {
+          setResolvedLocation(CITY_ALIASES[searchKey]);
+          setIsResolving(false);
+          return;
+        }
+
+        // Try to find matching city from API
+        try {
+          if (propProvinsi && propKabkota) {
+            setResolvedLocation({
+              provinsi: propProvinsi.toUpperCase(),
+              kabkota: propKabkota.toUpperCase(),
+            });
+          } else if (propKabkota) {
+            // Search through all provinces for this city
+            const provinces = await fetchProvinsi();
+            for (const prov of provinces) {
+              try {
+                const cities = await fetchKabKota(prov);
+                const matchedCity = cities.find(
+                  (c) => c.toLowerCase().includes(searchKey) || searchKey.includes(c.toLowerCase())
+                );
+                if (matchedCity) {
+                  setResolvedLocation({ provinsi: prov, kabkota: matchedCity });
+                  setIsResolving(false);
+                  return;
+                }
+              } catch {
+                continue;
+              }
+            }
+          }
+        } catch (error) {
+          console.warn("[ShalatCard] Failed to resolve location:", error);
+        }
+
+        setIsResolving(false);
+      }
+    };
+
+    resolveLocation();
+  }, [propProvinsi, propKabkota]);
+
+  // Final location to use
+  const finalProvinsi = resolvedLocation?.provinsi || localStorage.getItem("shalat_provinsi") || "DKI JAKARTA";
+  const finalKabkota = resolvedLocation?.kabkota || localStorage.getItem("shalat_kabkota") || "KOTA JAKARTA PUSAT";
 
   const { data: schedule, isLoading, error } = useQuery({
-    queryKey: ["shalat", savedProvinsi, savedKabkota],
-    queryFn: () => fetchShalatScheduleMonthly(savedProvinsi, savedKabkota),
+    queryKey: ["shalat", finalProvinsi, finalKabkota],
+    queryFn: () => fetchShalatScheduleMonthly(finalProvinsi, finalKabkota),
     staleTime: 1000 * 60 * 60, // 1 hour
+    enabled: !isResolving,
   });
 
   // Get today's schedule
@@ -56,12 +143,14 @@ const ShalatCard = ({ className }: ShalatCardProps) => {
 
   const nextPrayer = getNextPrayer();
 
-  if (isLoading) {
+  if (isLoading || isResolving) {
     return (
       <div className={cn("my-3 rounded-xl border-l-4 border-emerald-500 bg-emerald-500/5 p-4", className)}>
         <div className="flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />
-          <span className="text-sm text-muted-foreground">Memuat jadwal sholat...</span>
+          <span className="text-sm text-muted-foreground">
+            {isResolving ? `Mencari lokasi ${propKabkota || propProvinsi}...` : "Memuat jadwal sholat..."}
+          </span>
         </div>
       </div>
     );
@@ -70,17 +159,17 @@ const ShalatCard = ({ className }: ShalatCardProps) => {
   if (error || !todaySchedule) {
     return (
       <div className={cn("my-3 rounded-xl border-l-4 border-emerald-500 bg-emerald-500/5 p-4", className)}>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-emerald-500" />
+            <span className="text-xl">🕌</span>
             <span className="text-sm text-muted-foreground">
-              Jadwal sholat tidak tersedia
+              Jadwal sholat untuk "{propKabkota || propProvinsi || finalKabkota}" tidak ditemukan
             </span>
           </div>
           <Link to="/shalat">
             <Button variant="outline" size="sm" className="gap-1.5">
               <ExternalLink className="h-3.5 w-3.5" />
-              Atur Lokasi
+              Pilih Lokasi
             </Button>
           </Link>
         </div>
@@ -109,7 +198,7 @@ const ShalatCard = ({ className }: ShalatCardProps) => {
             </span>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <MapPin className="h-3 w-3" />
-              {savedKabkota}
+              {finalKabkota}
             </div>
           </div>
         </div>

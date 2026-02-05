@@ -37,6 +37,8 @@ export interface ContentSegment {
   surah?: number;
   ayat?: string;
   query?: string; // for doa search
+  provinsi?: string; // for shalat/imsakiyah
+  kabkota?: string; // for shalat/imsakiyah
 }
 
 // Regex-based parser for rendering (handles all custom tags)
@@ -52,6 +54,8 @@ export function extractQuranTags(text: string): {
     ayat?: string;
     content?: string;
     query?: string;
+    provinsi?: string;
+    kabkota?: string;
   }
 
   const matches: TagMatch[] = [];
@@ -70,13 +74,16 @@ export function extractQuranTags(text: string): {
     });
   }
 
-  // Find shalat tags
-  const shalatRegex = /<shalat\s*\/>/g;
+  // Find shalat tags with optional provinsi and kabkota attributes
+  // Supports: <shalat/>, <shalat kabkota="X"/>, <shalat provinsi="X" kabkota="Y"/>
+  const shalatRegex = /<shalat(?:\s+(?:provinsi="([^"]*)")?(?:\s*kabkota="([^"]*)")?|\s+kabkota="([^"]*)")?\s*\/>/g;
   while ((match = shalatRegex.exec(text)) !== null) {
     matches.push({
       type: "shalat",
       index: match.index,
       length: match[0].length,
+      provinsi: match[1] || undefined,
+      kabkota: match[2] || match[3] || undefined,
     });
   }
 
@@ -91,13 +98,15 @@ export function extractQuranTags(text: string): {
     });
   }
 
-  // Find imsakiyah tags
-  const imsakiyahRegex = /<imsakiyah\s*\/>/g;
+  // Find imsakiyah tags with optional provinsi and kabkota attributes
+  const imsakiyahRegex = /<imsakiyah(?:\s+(?:provinsi="([^"]*)")?(?:\s*kabkota="([^"]*)")?|\s+kabkota="([^"]*)")?\s*\/>/g;
   while ((match = imsakiyahRegex.exec(text)) !== null) {
     matches.push({
       type: "imsakiyah",
       index: match.index,
       length: match[0].length,
+      provinsi: match[1] || undefined,
+      kabkota: match[2] || match[3] || undefined,
     });
   }
 
@@ -132,6 +141,8 @@ export function extractQuranTags(text: string): {
       segments.push({
         type: "shalat",
         content: "",
+        provinsi: m.provinsi,
+        kabkota: m.kabkota,
       });
     } else if (m.type === "doa") {
       segments.push({
@@ -143,6 +154,8 @@ export function extractQuranTags(text: string): {
       segments.push({
         type: "imsakiyah",
         content: "",
+        provinsi: m.provinsi,
+        kabkota: m.kabkota,
       });
     }
 
