@@ -12,24 +12,25 @@ interface ImsakiyahCardProps {
   className?: string;
 }
 
-// Map common city names to their official kabkota names
+// Map common city names to their official kabkota names (matching API format)
 const CITY_ALIASES: Record<string, { provinsi: string; kabkota: string }> = {
-  "malang": { provinsi: "JAWA TIMUR", kabkota: "KABUPATEN MALANG" },
-  "kota malang": { provinsi: "JAWA TIMUR", kabkota: "KOTA MALANG" },
-  "kabupaten malang": { provinsi: "JAWA TIMUR", kabkota: "KABUPATEN MALANG" },
-  "kab malang": { provinsi: "JAWA TIMUR", kabkota: "KABUPATEN MALANG" },
-  "surabaya": { provinsi: "JAWA TIMUR", kabkota: "KOTA SURABAYA" },
-  "jakarta": { provinsi: "DKI JAKARTA", kabkota: "KOTA JAKARTA PUSAT" },
-  "jakarta pusat": { provinsi: "DKI JAKARTA", kabkota: "KOTA JAKARTA PUSAT" },
-  "jakarta selatan": { provinsi: "DKI JAKARTA", kabkota: "KOTA JAKARTA SELATAN" },
-  "bandung": { provinsi: "JAWA BARAT", kabkota: "KOTA BANDUNG" },
-  "semarang": { provinsi: "JAWA TENGAH", kabkota: "KOTA SEMARANG" },
-  "yogyakarta": { provinsi: "DI YOGYAKARTA", kabkota: "KOTA YOGYAKARTA" },
-  "jogja": { provinsi: "DI YOGYAKARTA", kabkota: "KOTA YOGYAKARTA" },
-  "medan": { provinsi: "SUMATERA UTARA", kabkota: "KOTA MEDAN" },
-  "makassar": { provinsi: "SULAWESI SELATAN", kabkota: "KOTA MAKASSAR" },
-  "denpasar": { provinsi: "BALI", kabkota: "KOTA DENPASAR" },
-  "bali": { provinsi: "BALI", kabkota: "KOTA DENPASAR" },
+  "malang": { provinsi: "Jawa Timur", kabkota: "Kab. Malang" },
+  "kota malang": { provinsi: "Jawa Timur", kabkota: "Kota Malang" },
+  "kabupaten malang": { provinsi: "Jawa Timur", kabkota: "Kab. Malang" },
+  "kab malang": { provinsi: "Jawa Timur", kabkota: "Kab. Malang" },
+  "kab. malang": { provinsi: "Jawa Timur", kabkota: "Kab. Malang" },
+  "surabaya": { provinsi: "Jawa Timur", kabkota: "Kota Surabaya" },
+  "jakarta": { provinsi: "DKI Jakarta", kabkota: "Kota Jakarta" },
+  "jakarta pusat": { provinsi: "DKI Jakarta", kabkota: "Kota Jakarta" },
+  "jakarta selatan": { provinsi: "DKI Jakarta", kabkota: "Kota Jakarta" },
+  "bandung": { provinsi: "Jawa Barat", kabkota: "Kota Bandung" },
+  "semarang": { provinsi: "Jawa Tengah", kabkota: "Kota Semarang" },
+  "yogyakarta": { provinsi: "D.I. Yogyakarta", kabkota: "Kota Yogyakarta" },
+  "jogja": { provinsi: "D.I. Yogyakarta", kabkota: "Kota Yogyakarta" },
+  "medan": { provinsi: "Sumatera Utara", kabkota: "Kota Medan" },
+  "makassar": { provinsi: "Sulawesi Selatan", kabkota: "Kota Makassar" },
+  "denpasar": { provinsi: "Bali", kabkota: "Kota Denpasar" },
+  "bali": { provinsi: "Bali", kabkota: "Kota Denpasar" },
 };
 
 const ImsakiyahCard = ({ provinsi: propProvinsi, kabkota: propKabkota, className }: ImsakiyahCardProps) => {
@@ -52,8 +53,8 @@ const ImsakiyahCard = ({ provinsi: propProvinsi, kabkota: propKabkota, className
         try {
           if (propProvinsi && propKabkota) {
             setResolvedLocation({
-              provinsi: propProvinsi.toUpperCase(),
-              kabkota: propKabkota.toUpperCase(),
+              provinsi: propProvinsi,
+              kabkota: propKabkota,
             });
           } else if (propKabkota) {
             const provResponse = await fetchProvinsiImsakiyah();
@@ -84,8 +85,8 @@ const ImsakiyahCard = ({ provinsi: propProvinsi, kabkota: propKabkota, className
     resolveLocation();
   }, [propProvinsi, propKabkota]);
 
-  const finalProvinsi = resolvedLocation?.provinsi || localStorage.getItem("imsakiyah_provinsi") || "DKI JAKARTA";
-  const finalKabkota = resolvedLocation?.kabkota || localStorage.getItem("imsakiyah_kabkota") || "KOTA JAKARTA PUSAT";
+  const finalProvinsi = resolvedLocation?.provinsi || localStorage.getItem("imsakiyah_provinsi") || "DKI Jakarta";
+  const finalKabkota = resolvedLocation?.kabkota || localStorage.getItem("imsakiyah_kabkota") || "Kota Jakarta";
 
   const { data: imsakiyah, isLoading, error } = useQuery({
     queryKey: ["imsakiyah", finalProvinsi, finalKabkota],
