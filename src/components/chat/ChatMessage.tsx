@@ -4,6 +4,9 @@ import remarkGfm from "remark-gfm";
 import { ChatMessage as ChatMessageType } from "@/types/chat";
 import { extractQuranTags } from "@/lib/quranParser";
 import QuranCard from "./QuranCard";
+import ShalatCard from "./ShalatCard";
+import DoaCard from "./DoaCard";
+import ImsakiyahCard from "./ImsakiyahCard";
 import { cn } from "@/lib/utils";
 
 interface ChatMessageProps {
@@ -88,7 +91,7 @@ const MarkdownComponents = {
 const ChatMessage = ({ message }: ChatMessageProps) => {
   const isUser = message.role === "user";
 
-  // Parse content for quran tags (assistant only)
+  // Parse content for tags (assistant only)
   const renderContent = () => {
     if (isUser) {
       return <p className="whitespace-pre-wrap">{message.content}</p>;
@@ -108,6 +111,15 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
                 arabic={segment.content}
               />
             );
+          }
+          if (segment.type === "shalat") {
+            return <ShalatCard key={index} />;
+          }
+          if (segment.type === "doa") {
+            return <DoaCard key={index} query={segment.query || ""} />;
+          }
+          if (segment.type === "imsakiyah") {
+            return <ImsakiyahCard key={index} />;
           }
           return (
             <div key={index} className="prose-chat">
