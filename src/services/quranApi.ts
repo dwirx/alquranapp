@@ -1,4 +1,4 @@
-import { ApiResponse, Surah, SurahDetail, Tafsir } from "@/types/quran";
+import { ApiResponse, Ayat, Surah, SurahDetail, Tafsir } from "@/types/quran";
 
 const BASE_URL = "https://equran.id/api/v2";
 
@@ -27,4 +27,24 @@ export async function fetchTafsir(nomor: number): Promise<Tafsir> {
   }
   const data: ApiResponse<Tafsir> = await response.json();
   return data.data;
+}
+
+export async function fetchAyat(
+  surah: number,
+  ayat: number
+): Promise<Ayat | null> {
+  const surahData = await fetchSurahDetail(surah);
+  const ayatData = surahData.ayat.find((a) => a.nomorAyat === ayat);
+  return ayatData || null;
+}
+
+export async function fetchAyatRange(
+  surah: number,
+  startAyat: number,
+  endAyat: number
+): Promise<Ayat[]> {
+  const surahData = await fetchSurahDetail(surah);
+  return surahData.ayat.filter(
+    (a) => a.nomorAyat >= startAyat && a.nomorAyat <= endAyat
+  );
 }

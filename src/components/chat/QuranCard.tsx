@@ -1,8 +1,12 @@
 import { Link } from "react-router-dom";
-import { BookOpen, Copy, Check, ExternalLink } from "lucide-react";
+import { BookOpen, Copy, Check, ExternalLink, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { fetchAyatRange } from "@/services/quranApi";
+import { Ayat } from "@/types/quran";
+import { cn } from "@/lib/utils";
 
 interface QuranCardProps {
   surah: number;
@@ -13,12 +17,31 @@ interface QuranCardProps {
 
 const QuranCard = ({ surah, ayat, arabic, surahName }: QuranCardProps) => {
   const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(true);
+
+  // Parse ayat range
+  const ayatParts = ayat.split("-");
+  const startAyat = parseInt(ayatParts[0]);
+  const endAyat = ayatParts.length > 1 ? parseInt(ayatParts[1]) : startAyat;
+
+  // Fetch ayat data from API
+  const { data: ayatData, isLoading } = useQuery({
+    queryKey: ["ayat", surah, startAyat, endAyat],
+    queryFn: () => fetchAyatRange(surah, startAyat, endAyat),
+    staleTime: Infinity, // Quran data never changes
+  });
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(arabic);
+      let textToCopy = arabic;
+      if (ayatData && ayatData.length > 0) {
+        textToCopy = ayatData
+          .map((a) => `${a.teksArab}\n${a.teksLatin}\n${a.teksIndonesia}`)
+          .join("\n\n");
+      }
+      await navigator.clipboard.writeText(textToCopy);
       setCopied(true);
-      toast.success("Teks Arab berhasil disalin");
+      toast.success("Teks berhasil disalin");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Gagal menyalin teks");
@@ -60,44 +83,98 @@ const QuranCard = ({ surah, ayat, arabic, surahName }: QuranCardProps) => {
   const displayName = surahName || surahNames[surah] || `Surah ${surah}`;
   const firstAyat = ayat.includes("-") ? ayat.split("-")[0] : ayat;
 
+  const renderAyatContent = (ayatItem: Ayat) => (
+    <div key={ayatItem.nomorAyat} className="space-y-2">
+      {/* Ayat number badge for ranges */}
+      {startAyat !== endAyat && (
+        <span className="inline-block text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full mb-1">
+          Ayat {ayatItem.nomorAyat}
+        </span>
+      )}
+
+      {/* Arabic */}
+      <p className="font-arabic text-2xl leading-loose text-right text-foreground">
+        {ayatItem.teksArab}
+      </p>
+
+      {/* Latin */}
+      <p className="text-sm italic text-muted-foreground leading-relaxed">
+        {ayatItem.teksLatin}
+      </p>
+
+      {/* Translation */}
+      <p className="text-sm text-foreground/90 leading-relaxed">
+        {ayatItem.teksIndonesia}
+      </p>
+    </div>
+  );
+
   return (
-    <div className="my-3 rounded-xl border-l-4 border-primary bg-primary/5 p-4 space-y-3">
+    <div className="my-3 rounded-xl border-l-4 border-primary bg-primary/5 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-primary/10 transition-colors"
+        onClick={() => setExpanded(!expanded)}
+      >
         <div className="flex items-center gap-2">
           <BookOpen className="h-4 w-4 text-primary" />
           <span className="font-semibold text-primary">
             {displayName}: {ayat}
           </span>
+          {isLoading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
         </div>
+        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+          {expanded ? (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
+        </Button>
       </div>
 
-      {/* Arabic Text */}
-      <p className="font-arabic text-2xl leading-loose text-right text-foreground">
-        {arabic}
-      </p>
-
-      {/* Actions */}
-      <div className="flex items-center gap-2 pt-2 border-t border-border/50">
-        <Link to={`/surah/${surah}#ayat-${firstAyat}`}>
-          <Button variant="default" size="sm" className="gap-1.5">
-            <ExternalLink className="h-3.5 w-3.5" />
-            Buka Surah
-          </Button>
-        </Link>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5"
-          onClick={handleCopy}
-        >
-          {copied ? (
-            <Check className="h-3.5 w-3.5" />
+      {/* Content */}
+      <div
+        className={cn(
+          "overflow-hidden transition-all duration-300",
+          expanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+        )}
+      >
+        <div className="px-4 pb-4 space-y-4">
+          {/* Ayat content */}
+          {ayatData && ayatData.length > 0 ? (
+            <div className="space-y-4 divide-y divide-border/50">
+              {ayatData.map((a) => renderAyatContent(a))}
+            </div>
           ) : (
-            <Copy className="h-3.5 w-3.5" />
+            // Fallback to arabic from props if API data not available
+            <p className="font-arabic text-2xl leading-loose text-right text-foreground">
+              {arabic}
+            </p>
           )}
-          {copied ? "Tersalin" : "Salin"}
-        </Button>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2 pt-3 border-t border-border/50">
+            <Link to={`/surah/${surah}#ayat-${firstAyat}`}>
+              <Button variant="default" size="sm" className="gap-1.5">
+                <ExternalLink className="h-3.5 w-3.5" />
+                Buka Surah
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={handleCopy}
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+              {copied ? "Tersalin" : "Salin"}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
