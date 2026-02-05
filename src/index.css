@@ -381,7 +381,7 @@
   /* Chat prose styling */
   .prose-chat {
     font-size: 0.9375rem;
-    line-height: 1.65;
+    line-height: 1.7;
     color: inherit;
   }
 
@@ -391,5 +391,57 @@
 
   .prose-chat > *:last-child {
     margin-bottom: 0;
+  }
+
+  /* Better spacing for consecutive elements in chat */
+  .prose-chat p + p {
+    margin-top: 0.75rem;
+  }
+
+  .prose-chat ul + p,
+  .prose-chat ol + p,
+  .prose-chat blockquote + p {
+    margin-top: 1rem;
+  }
+
+  .prose-chat p + ul,
+  .prose-chat p + ol {
+    margin-top: 0.5rem;
+  }
+
+  /* Code block styling enhancements */
+  .prose-chat pre {
+    margin: 1rem 0;
+  }
+
+  .prose-chat pre code {
+    display: block;
+    padding: 0;
+    background: transparent;
+    border: none;
+  }
+
+  /* Inline code in chat */
+  .prose-chat code:not(pre code) {
+    font-size: 0.875em;
+  }
+
+  /* Task/checkbox lists */
+  .prose-chat input[type="checkbox"] {
+    margin-right: 0.5rem;
+    accent-color: hsl(var(--primary));
+  }
+
+  /* Strikethrough text */
+  .prose-chat del {
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+
+  /* Ensure proper RTL for Arabic in chat */
+  .prose-chat .arabic-text {
+    text-align: right;
+    display: block;
+    margin: 0.5rem 0;
   }
 }
