@@ -1,7 +1,7 @@
 import { MessageSquareText, Plus, Trash2 } from "lucide-react";
 import { ResponsiveLayout } from "@/components/layout";
 import { ChatContainer, ChatHistory } from "@/components/chat";
-import { useChatHistory } from "@/hooks/useChatHistory";
+import { useChatDB } from "@/hooks/useChatDB";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -30,7 +30,7 @@ const AiChatPage = () => {
     switchSession,
     deleteSession,
     clearAllHistory,
-  } = useChatHistory();
+  } = useChatDB();
 
   return (
     <ResponsiveLayout>

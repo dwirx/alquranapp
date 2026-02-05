@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { useChatHistory } from "@/hooks/useChatHistory";
+import { useChatDB } from "@/hooks/useChatDB";
 import { searchQuranVector, formatVectorResultsForContext } from "@/services/vectorSearchApi";
 import { streamAiResponse, getSystemPrompt, ChatMessagePayload } from "@/services/aiChatApi";
 import { ChatMessage as ChatMessageType } from "@/types/chat";
@@ -8,9 +8,10 @@ import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
 import ThinkingIndicator from "./ThinkingIndicator";
 import SuggestedQuestions from "./SuggestedQuestions";
+import { ChatHeader } from "./ChatHeader";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Loader2 } from "lucide-react";
 
 type ChatStatus = "idle" | "searching" | "thinking" | "generating" | "error";
 
@@ -21,7 +22,11 @@ const ChatContainer = () => {
     addMessage,
     updateLastMessage,
     completeStreaming,
-  } = useChatHistory();
+    selectedModel,
+    setSelectedModel,
+    isLoading: isDBLoading,
+    isReady,
+  } = useChatDB();
 
   const [status, setStatus] = useState<ChatStatus>("idle");
   const [thinkingContent, setThinkingContent] = useState("");
@@ -44,7 +49,7 @@ const ChatContainer = () => {
     // Ensure we have a session
     let session = currentSession;
     if (!session) {
-      session = createSession();
+      session = await createSession();
     }
 
     // Reset state
@@ -60,7 +65,7 @@ const ChatContainer = () => {
       content,
       timestamp: Date.now(),
     };
-    addMessage(userMessage);
+    await addMessage(userMessage);
 
     try {
       // Step 1: Vector search for relevant ayat
@@ -102,15 +107,16 @@ const ChatContainer = () => {
         timestamp: Date.now(),
         isStreaming: true,
       };
-      addMessage(assistantMessage);
+      await addMessage(assistantMessage);
 
-      console.log("[AI Chat] Sending to LLM...");
+      console.log("[AI Chat] Sending to LLM with model:", selectedModel);
 
       // Step 4: Stream response
       let hasContent = false;
       await streamAiResponse(
         llmMessages,
-        (chunk, thinking) => {
+        selectedModel,
+        (chunk: string, thinking?: string) => {
           if (thinking) {
             setThinkingContent((prev) => prev + thinking);
           }
@@ -129,7 +135,7 @@ const ChatContainer = () => {
           setThinkingContent("");
           toast.success("Jawaban selesai");
         },
-        (error) => {
+        (error: Error) => {
           console.error("[AI Chat] Error:", error);
           setStatus("error");
           setErrorMessage(error.message || "Gagal mendapatkan respons dari AI");
@@ -150,12 +156,35 @@ const ChatContainer = () => {
     }
   };
 
+  // Handle model change
+  const handleModelChange = (modelId: string) => {
+    setSelectedModel(modelId);
+    toast.success(`Model diubah ke ${modelId.split("/").pop()}`);
+  };
+
+  // Show loading while DB initializes
+  if (isDBLoading || !isReady) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Memuat...</p>
+      </div>
+    );
+  }
+
   const messages = currentSession?.messages || [];
   const showSuggestions = messages.length === 0 && status === "idle";
   const isLoading = status !== "idle" && status !== "error";
 
   return (
     <div className="flex flex-col h-full">
+      {/* Header with Model Selector */}
+      <ChatHeader
+        selectedModelId={selectedModel}
+        onSelectModel={handleModelChange}
+        disabled={isLoading}
+      />
+
       {/* Messages Area */}
       <ScrollArea ref={scrollRef} className="flex-1 p-4">
         <div className="max-w-3xl mx-auto space-y-6">

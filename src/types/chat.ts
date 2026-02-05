@@ -83,6 +83,7 @@ export interface ChatSession {
   id: string;
   title: string;
   messages: ChatMessage[];
+  modelId: string; // Model used for this session
   createdAt: number;
   updatedAt: number;
 }

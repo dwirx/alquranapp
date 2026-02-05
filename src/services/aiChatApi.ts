@@ -3,7 +3,6 @@ import { SYSTEM_PROMPTS } from "quran-validator";
 // OpenRouter API configuration
 const OPENROUTER_API_URL = import.meta.env.VITE_OPENROUTER_API_URL || "https://openrouter.ai/api/v1/chat/completions";
 const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
-const OPENROUTER_MODEL = import.meta.env.VITE_OPENROUTER_MODEL || "openai/gpt-4.1-mini";
 
 export interface ChatMessagePayload {
   role: "system" | "user" | "assistant";
@@ -34,13 +33,14 @@ Berdasarkan konteks di atas, jawab pertanyaan pengguna dengan menyertakan ayat-a
 // Stream AI response using fetch with ReadableStream
 export async function streamAiResponse(
   messages: ChatMessagePayload[],
+  modelId: string,
   onChunk: (content: string, thinking?: string) => void,
   onComplete: () => void,
   onError: (error: Error) => void
 ): Promise<void> {
   console.log("[AI API] Starting stream request...");
   console.log("[AI API] URL:", OPENROUTER_API_URL);
-  console.log("[AI API] Model:", OPENROUTER_MODEL);
+  console.log("[AI API] Model:", modelId);
   console.log("[AI API] Messages count:", messages.length);
 
   try {
@@ -53,7 +53,7 @@ export async function streamAiResponse(
         "X-Title": "Al-Quran App",
       },
       body: JSON.stringify({
-        model: OPENROUTER_MODEL,
+        model: modelId,
         messages: messages,
         max_tokens: 4096,
         temperature: 0.7,
@@ -141,7 +141,8 @@ export async function streamAiResponse(
 
 // Non-streaming version for simpler use cases
 export async function sendAiMessage(
-  messages: ChatMessagePayload[]
+  messages: ChatMessagePayload[],
+  modelId: string
 ): Promise<string> {
   console.log("[AI API] Sending non-streaming request...");
 
@@ -154,7 +155,7 @@ export async function sendAiMessage(
       "X-Title": "Al-Quran App",
     },
     body: JSON.stringify({
-      model: OPENROUTER_MODEL,
+      model: modelId,
       messages: messages,
       max_tokens: 4096,
       temperature: 0.7,
