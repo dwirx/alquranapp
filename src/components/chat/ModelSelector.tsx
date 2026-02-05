@@ -1,15 +1,31 @@
 import { useState } from "react";
-import { Check, ChevronDown, Loader2, Sparkles, Zap } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Loader2,
+  Sparkles,
+  Zap,
+  ArrowUpDown,
+  RefreshCw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { useModels, ModelFilter } from "@/hooks/useModels";
+import { useModels, ModelFilter, ModelSort } from "@/hooks/useModels";
 import { AIModel } from "@/lib/chatDB";
 import { formatPrice } from "@/services/openRouterApi";
 
@@ -19,20 +35,46 @@ interface ModelSelectorProps {
   disabled?: boolean;
 }
 
+const SORT_OPTIONS: { value: ModelSort; label: string }[] = [
+  { value: "name-asc", label: "Nama A-Z" },
+  { value: "name-desc", label: "Nama Z-A" },
+  { value: "price-asc", label: "Termurah" },
+  { value: "price-desc", label: "Termahal" },
+  { value: "context-desc", label: "Context Terbesar" },
+];
+
 export function ModelSelector({
   selectedModelId,
   onSelectModel,
   disabled,
 }: ModelSelectorProps) {
-  const { models, allModels, isLoading, filter, setFilter, getModel } = useModels();
+  const {
+    models,
+    allModels,
+    isLoading,
+    filter,
+    setFilter,
+    sort,
+    setSort,
+    getModel,
+    refreshModels,
+  } = useModels();
   const [isOpen, setIsOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const selectedModel = getModel(selectedModelId);
-  const displayName = selectedModel?.name || selectedModelId.split("/").pop() || "Pilih Model";
+  const displayName =
+    selectedModel?.name || selectedModelId.split("/").pop() || "Pilih Model";
 
   const handleSelect = (model: AIModel) => {
     onSelectModel(model.id);
     setIsOpen(false);
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refreshModels();
+    setIsRefreshing(false);
   };
 
   return (
@@ -60,7 +102,7 @@ export function ModelSelector({
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-[280px]">
+      <DropdownMenuContent align="end" className="w-[320px]">
         {/* Filter Tabs */}
         <div className="p-2 border-b">
           <Tabs
@@ -82,6 +124,34 @@ export function ModelSelector({
           </Tabs>
         </div>
 
+        {/* Sort & Refresh */}
+        <div className="p-2 border-b flex items-center gap-2">
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <Select value={sort} onValueChange={(v) => setSort(v as ModelSort)}>
+            <SelectTrigger className="h-8 text-xs flex-1">
+              <SelectValue placeholder="Urutkan" />
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value} className="text-xs">
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 flex-shrink-0"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw
+              className={cn("h-4 w-4", isRefreshing && "animate-spin")}
+            />
+          </Button>
+        </div>
+
         {/* Model List */}
         <div className="max-h-[300px] overflow-y-auto">
           {isLoading ? (
@@ -98,7 +168,7 @@ export function ModelSelector({
                 key={model.id}
                 onClick={() => handleSelect(model)}
                 className={cn(
-                  "flex items-center justify-between gap-2 cursor-pointer",
+                  "flex items-center justify-between gap-2 cursor-pointer py-2",
                   selectedModelId === model.id && "bg-accent"
                 )}
               >
@@ -108,7 +178,12 @@ export function ModelSelector({
                   ) : (
                     <Sparkles className="h-4 w-4 text-blue-500 flex-shrink-0" />
                   )}
-                  <span className="truncate">{model.name}</span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm">{model.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(model.context_length / 1000).toFixed(0)}K context
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -129,6 +204,11 @@ export function ModelSelector({
               </DropdownMenuItem>
             ))
           )}
+        </div>
+
+        <DropdownMenuSeparator />
+        <div className="p-2 text-xs text-muted-foreground text-center">
+          {models.length} model ditampilkan
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

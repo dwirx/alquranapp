@@ -100,19 +100,34 @@ export async function streamAiResponse(
             return;
           }
 
+          // Skip empty data
+          if (!data) continue;
+
           try {
             const parsed = JSON.parse(data);
+            console.debug("[AI API] Parsed chunk:", JSON.stringify(parsed).substring(0, 200));
+
             const choice = parsed.choices?.[0];
             const delta = choice?.delta;
+            const message = choice?.message; // Some models use message instead of delta
 
             if (delta) {
               chunkCount++;
+
+              // Handle reasoning content (for thinking models like DeepSeek R1)
+              if (delta.reasoning_content) {
+                onChunk("", delta.reasoning_content);
+              }
 
               // Handle actual content
               if (delta.content) {
                 contentReceived = true;
                 onChunk(delta.content);
               }
+            } else if (message?.content) {
+              // Non-streaming format in stream (some models do this)
+              contentReceived = true;
+              onChunk(message.content);
             }
 
             // Check if finished
@@ -121,8 +136,11 @@ export async function streamAiResponse(
             }
           } catch (parseError) {
             // Skip invalid JSON lines
-            console.debug("[AI API] Skipping invalid JSON:", data.substring(0, 50));
+            console.debug("[AI API] Skipping invalid JSON:", data.substring(0, 100));
           }
+        } else if (line.trim() && !line.startsWith(":")) {
+          // Log non-data lines for debugging
+          console.debug("[AI API] Non-data line:", line.substring(0, 100));
         }
       }
     }

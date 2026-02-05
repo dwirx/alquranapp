@@ -1,16 +1,18 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { AIModel, getAllModels, saveModels, getSetting, setSetting } from "@/lib/chatDB";
 import { fetchModels, FALLBACK_MODELS } from "@/services/openRouterApi";
 
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
 export type ModelFilter = "all" | "free" | "paid";
+export type ModelSort = "name-asc" | "name-desc" | "price-asc" | "price-desc" | "context-desc";
 
 export function useModels() {
   const [models, setModels] = useState<AIModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<ModelFilter>("all");
+  const [sort, setSort] = useState<ModelSort>("name-asc");
 
   // Fetch and cache models
   const loadModels = useCallback(async (forceRefresh = false) => {
@@ -56,12 +58,39 @@ export function useModels() {
     loadModels();
   }, [loadModels]);
 
-  // Filter models
-  const filteredModels = models.filter((model) => {
-    if (filter === "free") return model.isFree;
-    if (filter === "paid") return !model.isFree;
-    return true;
-  });
+  // Filter and sort models
+  const processedModels = useMemo(() => {
+    // First filter
+    let result = models.filter((model) => {
+      if (filter === "free") return model.isFree;
+      if (filter === "paid") return !model.isFree;
+      return true;
+    });
+
+    // Then sort
+    result = [...result].sort((a, b) => {
+      switch (sort) {
+        case "name-asc":
+          return a.name.localeCompare(b.name);
+        case "name-desc":
+          return b.name.localeCompare(a.name);
+        case "price-asc":
+          // Free first, then by price
+          if (a.isFree !== b.isFree) return a.isFree ? -1 : 1;
+          return a.pricing.prompt - b.pricing.prompt;
+        case "price-desc":
+          // Expensive first
+          if (a.isFree !== b.isFree) return a.isFree ? 1 : -1;
+          return b.pricing.prompt - a.pricing.prompt;
+        case "context-desc":
+          return b.context_length - a.context_length;
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [models, filter, sort]);
 
   // Get model by ID
   const getModel = useCallback(
@@ -77,12 +106,14 @@ export function useModels() {
   }, [loadModels]);
 
   return {
-    models: filteredModels,
+    models: processedModels,
     allModels: models,
     isLoading,
     error,
     filter,
     setFilter,
+    sort,
+    setSort,
     getModel,
     refreshModels,
   };
