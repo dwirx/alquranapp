@@ -36,7 +36,8 @@ export async function streamAiResponse(
   modelId: string,
   onChunk: (content: string, thinking?: string) => void,
   onComplete: () => void,
-  onError: (error: Error) => void
+  onError: (error: Error) => void,
+  signal?: AbortSignal
 ): Promise<void> {
   console.log("[AI API] Starting stream request...");
   console.log("[AI API] URL:", OPENROUTER_API_URL);
@@ -60,6 +61,7 @@ export async function streamAiResponse(
         top_p: 0.95,
         stream: true,
       }),
+      signal,
     });
 
     console.log("[AI API] Response status:", response.status);
@@ -109,14 +111,28 @@ export async function streamAiResponse(
 
             const choice = parsed.choices?.[0];
             const delta = choice?.delta;
-            const message = choice?.message; // Some models use message instead of delta
+            const message = choice?.message;
 
             if (delta) {
               chunkCount++;
 
-              // Handle reasoning content (for thinking models like DeepSeek R1)
+              // Handle reasoning_details array (OpenRouter format for reasoning models)
+              if (delta.reasoning_details && Array.isArray(delta.reasoning_details)) {
+                for (const detail of delta.reasoning_details) {
+                  if (detail.type === "reasoning.text" && detail.text) {
+                    onChunk("", detail.text);
+                  }
+                }
+              }
+
+              // Handle reasoning_content (alternative field name)
               if (delta.reasoning_content) {
                 onChunk("", delta.reasoning_content);
+              }
+
+              // Handle reasoning field (some models use this)
+              if (delta.reasoning) {
+                onChunk("", delta.reasoning);
               }
 
               // Handle actual content

@@ -11,7 +11,8 @@ import SuggestedQuestions from "./SuggestedQuestions";
 import { ChatHeader } from "./ChatHeader";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Loader2 } from "lucide-react";
+import { RefreshCw, Loader2, Square } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type ChatStatus = "idle" | "searching" | "thinking" | "generating" | "error";
 
@@ -34,6 +35,7 @@ const ChatContainer = () => {
   const [lastQuestion, setLastQuestion] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Auto-scroll to bottom
   const scrollToBottom = useCallback(() => {
@@ -111,7 +113,8 @@ const ChatContainer = () => {
 
       console.log("[AI Chat] Sending to LLM with model:", selectedModel);
 
-      // Step 4: Stream response
+      // Step 4: Stream response with abort controller
+      abortControllerRef.current = new AbortController();
       let hasContent = false;
       await streamAiResponse(
         llmMessages,
@@ -130,17 +133,23 @@ const ChatContainer = () => {
         },
         () => {
           console.log("[AI Chat] Response complete");
+          abortControllerRef.current = null;
           completeStreaming();
           setStatus("idle");
           setThinkingContent("");
           toast.success("Jawaban selesai");
         },
         (error: Error) => {
+          if (error.name === "AbortError") {
+            console.log("[AI Chat] Request aborted");
+            return;
+          }
           console.error("[AI Chat] Error:", error);
           setStatus("error");
           setErrorMessage(error.message || "Gagal mendapatkan respons dari AI");
           completeStreaming();
-        }
+        },
+        abortControllerRef.current.signal
       );
     } catch (error) {
       console.error("[AI Chat] Unexpected error:", error);
@@ -155,6 +164,18 @@ const ChatContainer = () => {
       handleSend(lastQuestion);
     }
   };
+
+  // Stop generation
+  const handleStop = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      completeStreaming();
+      setStatus("idle");
+      setThinkingContent("");
+      toast.info("Generasi dihentikan");
+    }
+  }, [completeStreaming]);
 
   // Handle model change
   const handleModelChange = (modelId: string) => {
@@ -189,25 +210,35 @@ const ChatContainer = () => {
       <ScrollArea ref={scrollRef} className="flex-1 p-4">
         <div className="max-w-3xl mx-auto space-y-6">
           {showSuggestions && (
-            <div className="py-8">
+            <div className="py-8 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
               <SuggestedQuestions onSelect={handleSend} disabled={isLoading} />
             </div>
           )}
 
-          {messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
+          {messages.map((message, index) => (
+            <div
+              key={message.id}
+              className={cn(
+                "animate-in fade-in-0 duration-300",
+                index === messages.length - 1 && "slide-in-from-bottom-2"
+              )}
+            >
+              <ChatMessage message={message} />
+            </div>
           ))}
 
           {(isLoading || status === "error") && (
-            <ThinkingIndicator
-              thinking={thinkingContent}
-              status={status}
-              errorMessage={errorMessage}
-            />
+            <div className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+              <ThinkingIndicator
+                thinking={thinkingContent}
+                status={status}
+                errorMessage={errorMessage}
+              />
+            </div>
           )}
 
           {status === "error" && (
-            <div className="flex justify-center">
+            <div className="flex justify-center animate-in fade-in-0 duration-200">
               <Button
                 variant="outline"
                 size="sm"
@@ -226,16 +257,29 @@ const ChatContainer = () => {
 
       {/* Input Area */}
       <div className="p-4 border-t border-border bg-background/95 backdrop-blur-sm">
-        <div className="max-w-3xl mx-auto">
-          <ChatInput
-            onSend={handleSend}
-            disabled={isLoading}
-            placeholder={
-              isLoading
-                ? "Menunggu respons AI..."
-                : "Ketik pertanyaan tentang Al-Quran..."
-            }
-          />
+        <div className="max-w-3xl mx-auto flex items-center gap-2">
+          {isLoading ? (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleStop}
+              className="gap-2 shrink-0"
+            >
+              <Square className="h-4 w-4 fill-current" />
+              Stop
+            </Button>
+          ) : null}
+          <div className="flex-1">
+            <ChatInput
+              onSend={handleSend}
+              disabled={isLoading}
+              placeholder={
+                isLoading
+                  ? "Menunggu respons AI..."
+                  : "Ketik pertanyaan tentang Al-Quran..."
+              }
+            />
+          </div>
         </div>
       </div>
     </div>

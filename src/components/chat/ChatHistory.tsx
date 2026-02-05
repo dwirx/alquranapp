@@ -49,19 +49,21 @@ const ChatHistory = ({
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-1">
           {sessions.length === 0 ? (
-            <div className="p-4 text-center text-sm text-muted-foreground">
+            <div className="p-4 text-center text-sm text-muted-foreground animate-in fade-in-0 duration-300">
               Belum ada riwayat chat
             </div>
           ) : (
-            sessions.map((session) => (
+            sessions.map((session, index) => (
               <div
                 key={session.id}
                 className={cn(
-                  "group flex items-start gap-2 p-3 rounded-lg cursor-pointer transition-colors",
+                  "group flex items-start gap-2 p-3 rounded-lg cursor-pointer transition-all duration-200",
+                  "animate-in fade-in-0 slide-in-from-left-2",
                   currentSessionId === session.id
                     ? "bg-primary/10 text-primary"
                     : "hover:bg-muted"
                 )}
+                style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => onSelectSession(session.id)}
               >
                 <MessageSquare className="h-4 w-4 mt-0.5 shrink-0" />
