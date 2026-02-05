@@ -36,6 +36,8 @@ interface ModelSelectorProps {
 }
 
 const SORT_OPTIONS: { value: ModelSort; label: string }[] = [
+  { value: "newest", label: "Terbaru" },
+  { value: "oldest", label: "Terlama" },
   { value: "name-asc", label: "Nama A-Z" },
   { value: "name-desc", label: "Nama Z-A" },
   { value: "price-asc", label: "Termurah" },

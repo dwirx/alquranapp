@@ -5,14 +5,14 @@ import { fetchModels, FALLBACK_MODELS } from "@/services/openRouterApi";
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
 export type ModelFilter = "all" | "free" | "paid";
-export type ModelSort = "name-asc" | "name-desc" | "price-asc" | "price-desc" | "context-desc";
+export type ModelSort = "newest" | "oldest" | "name-asc" | "name-desc" | "price-asc" | "price-desc" | "context-desc";
 
 export function useModels() {
   const [models, setModels] = useState<AIModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<ModelFilter>("all");
-  const [sort, setSort] = useState<ModelSort>("name-asc");
+  const [sort, setSort] = useState<ModelSort>("newest");
 
   // Fetch and cache models
   const loadModels = useCallback(async (forceRefresh = false) => {
@@ -70,6 +70,12 @@ export function useModels() {
     // Then sort
     result = [...result].sort((a, b) => {
       switch (sort) {
+        case "newest":
+          // Newest first (higher created timestamp = newer)
+          return (b.created || 0) - (a.created || 0);
+        case "oldest":
+          // Oldest first (lower created timestamp = older)
+          return (a.created || 0) - (b.created || 0);
         case "name-asc":
           return a.name.localeCompare(b.name);
         case "name-desc":

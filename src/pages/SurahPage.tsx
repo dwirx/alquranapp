@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSurahDetail, fetchTafsir } from "@/services/quranApi";
 import { ResponsiveLayout } from "@/components/layout";
@@ -24,6 +24,7 @@ import { useSettings } from "@/hooks/useSettings";
 
 const SurahPage = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const surahNumber = parseInt(id || "1", 10);
 
   const [currentAyat, setCurrentAyat] = useState<Ayat | null>(null);
@@ -78,6 +79,25 @@ const SurahPage = () => {
       });
     }
   }, [surah?.nomor, addToHistory]);
+
+  // Scroll to ayat if hash is present in URL
+  useEffect(() => {
+    if (surah && location.hash) {
+      const ayatId = location.hash.slice(1); // Remove the '#'
+      const element = document.getElementById(ayatId);
+      if (element) {
+        // Small delay to ensure DOM is ready
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          // Add highlight effect
+          element.classList.add("ring-2", "ring-primary", "ring-offset-2");
+          setTimeout(() => {
+            element.classList.remove("ring-2", "ring-primary", "ring-offset-2");
+          }, 2000);
+        }, 300);
+      }
+    }
+  }, [surah, location.hash]);
 
   const currentTafsirText = tafsir?.tafsir.find(t => t.ayat === tafsirAyat)?.teks;
 

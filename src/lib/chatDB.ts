@@ -30,6 +30,7 @@ export interface AIModel {
   };
   context_length: number;
   isFree: boolean;
+  created?: number; // Unix timestamp when model was added
 }
 
 interface SettingValue {

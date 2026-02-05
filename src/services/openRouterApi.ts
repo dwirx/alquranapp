@@ -59,6 +59,7 @@ interface OpenRouterModel {
     completion: string;
   };
   context_length: number;
+  created?: number; // Unix timestamp when model was added
 }
 
 interface OpenRouterModelsResponse {
@@ -98,6 +99,7 @@ export async function fetchModels(): Promise<AIModel[]> {
           },
           context_length: model.context_length || 4096,
           isFree: promptPrice === 0 && completionPrice === 0,
+          created: model.created || 0,
         };
       })
       // Sort: free first, then by name
