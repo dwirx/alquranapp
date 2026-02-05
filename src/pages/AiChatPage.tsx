@@ -1,7 +1,7 @@
 import { MessageSquareText, Plus, Trash2 } from "lucide-react";
 import { ResponsiveLayout } from "@/components/layout";
 import { ChatContainer, ChatHistory } from "@/components/chat";
-import { useChatDB } from "@/hooks/useChatDB";
+import { ChatProvider, useChat } from "@/contexts/ChatContext";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -22,7 +22,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-const AiChatPage = () => {
+const AiChatPageContent = () => {
   const {
     sessions,
     currentSessionId,
@@ -30,7 +30,7 @@ const AiChatPage = () => {
     switchSession,
     deleteSession,
     clearAllHistory,
-  } = useChatDB();
+  } = useChat();
 
   return (
     <ResponsiveLayout>
@@ -174,6 +174,14 @@ const AiChatPage = () => {
         </div>
       </div>
     </ResponsiveLayout>
+  );
+};
+
+const AiChatPage = () => {
+  return (
+    <ChatProvider>
+      <AiChatPageContent />
+    </ChatProvider>
   );
 };
 

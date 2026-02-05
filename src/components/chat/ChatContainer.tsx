@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { useChatDB } from "@/hooks/useChatDB";
+import { useChat } from "@/contexts/ChatContext";
 import { searchQuranVector, formatVectorResultsForContext } from "@/services/vectorSearchApi";
 import { streamAiResponse, getSystemPrompt, ChatMessagePayload } from "@/services/aiChatApi";
 import { ChatMessage as ChatMessageType } from "@/types/chat";
@@ -27,7 +27,7 @@ const ChatContainer = () => {
     setSelectedModel,
     isLoading: isDBLoading,
     isReady,
-  } = useChatDB();
+  } = useChat();
 
   const [status, setStatus] = useState<ChatStatus>("idle");
   const [thinkingContent, setThinkingContent] = useState("");
