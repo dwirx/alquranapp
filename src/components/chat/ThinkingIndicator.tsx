@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { Loader2, Brain, Search, Sparkles, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, Brain, Search, Sparkles, CheckCircle2, XCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ThinkingIndicatorProps {
   thinking?: string;
   status: "searching" | "thinking" | "generating" | "error" | "idle";
   errorMessage?: string;
+  hasThinkingTokens?: boolean;
 }
 
 const statusConfig = {
@@ -40,8 +42,9 @@ const statusConfig = {
   },
 };
 
-const ThinkingIndicator = ({ thinking, status, errorMessage }: ThinkingIndicatorProps) => {
+const ThinkingIndicator = ({ thinking, status, errorMessage, hasThinkingTokens }: ThinkingIndicatorProps) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isThinkingExpanded, setIsThinkingExpanded] = useState(true);
   const config = statusConfig[status];
   const Icon = config.icon;
 
@@ -100,16 +103,32 @@ const ThinkingIndicator = ({ thinking, status, errorMessage }: ThinkingIndicator
           </div>
         )}
 
-        {thinking && status === "thinking" && (
+        {/* Show thinking content for both thinking and generating status when hasThinkingTokens */}
+        {thinking && (status === "thinking" || (status === "generating" && hasThinkingTokens)) && (
           <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
-            <p className="text-xs text-muted-foreground font-medium mb-1">Proses berpikir:</p>
-            <p className="text-xs text-muted-foreground italic whitespace-pre-wrap line-clamp-4">
-              {thinking}
-            </p>
+            <button
+              onClick={() => setIsThinkingExpanded(!isThinkingExpanded)}
+              className="flex items-center gap-1 text-xs text-muted-foreground font-medium mb-1 hover:text-foreground transition-colors"
+            >
+              {isThinkingExpanded ? (
+                <ChevronUp className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              )}
+              Proses berpikir {!isThinkingExpanded && `(${thinking.length} karakter)`}
+            </button>
+            {isThinkingExpanded && (
+              <p className={cn(
+                "text-xs text-muted-foreground italic whitespace-pre-wrap",
+                status === "generating" ? "line-clamp-3" : "line-clamp-6"
+              )}>
+                {thinking.slice(-1000)}
+              </p>
+            )}
           </div>
         )}
 
-        {(status === "searching" || status === "thinking") && !thinking && (
+        {(status === "searching" || (status === "thinking" && !thinking)) && (
           <div className="flex gap-1.5">
             <span className="w-2 h-2 rounded-full bg-current opacity-40 animate-bounce" style={{ animationDelay: "0ms" }} />
             <span className="w-2 h-2 rounded-full bg-current opacity-40 animate-bounce" style={{ animationDelay: "150ms" }} />

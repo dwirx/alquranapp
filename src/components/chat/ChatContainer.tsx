@@ -16,6 +16,22 @@ import { cn } from "@/lib/utils";
 
 type ChatStatus = "idle" | "searching" | "thinking" | "generating" | "error";
 
+// Models that support reasoning/thinking tokens
+const REASONING_MODEL_PATTERNS = [
+  "deepseek-r1",
+  "deepseek/deepseek-r1",
+  "o1-preview",
+  "o1-mini",
+  "o3-mini",
+  "qwq",
+  "reasoning",
+];
+
+function isReasoningModel(modelId: string): boolean {
+  const lowerId = modelId.toLowerCase();
+  return REASONING_MODEL_PATTERNS.some(pattern => lowerId.includes(pattern));
+}
+
 const ChatContainer = () => {
   const {
     currentSession,
@@ -31,6 +47,7 @@ const ChatContainer = () => {
 
   const [status, setStatus] = useState<ChatStatus>("idle");
   const [thinkingContent, setThinkingContent] = useState("");
+  const [hasThinkingTokens, setHasThinkingTokens] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [lastQuestion, setLastQuestion] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -61,6 +78,7 @@ const ChatContainer = () => {
     // Reset state
     setStatus("searching");
     setThinkingContent("");
+    setHasThinkingTokens(false);
     setErrorMessage("");
     setLastQuestion(content);
 
@@ -120,36 +138,62 @@ const ChatContainer = () => {
       await addMessage(assistantMessage, sessionId);
 
       console.log("[AI Chat] Sending to LLM with model:", selectedModel);
+      const modelIsReasoning = isReasoningModel(selectedModel);
+      console.log("[AI Chat] Is reasoning model:", modelIsReasoning);
 
       // Step 4: Stream response with abort controller
       abortControllerRef.current = new AbortController();
       let hasContent = false;
+      let thinkingDetected = false;
+
       await streamAiResponse(
         llmMessages,
         selectedModel,
         (chunk: string, thinking?: string) => {
+          // Handle thinking/reasoning tokens
           if (thinking) {
+            if (!thinkingDetected) {
+              thinkingDetected = true;
+              setHasThinkingTokens(true);
+              console.log("[AI Chat] Thinking tokens detected");
+            }
             setThinkingContent((prev) => prev + thinking);
           }
+
+          // Handle actual content
           if (chunk) {
             if (!hasContent) {
               setStatus("generating");
               hasContent = true;
+              console.log("[AI Chat] First content chunk received");
             }
             updateLastMessage(chunk, undefined, sessionId);
           }
         },
         () => {
-          console.log("[AI Chat] Response complete");
+          console.log("[AI Chat] Response complete, hasContent:", hasContent, "thinkingDetected:", thinkingDetected);
           abortControllerRef.current = null;
           completeStreaming(sessionId);
           setStatus("idle");
           setThinkingContent("");
-          toast.success("Jawaban selesai");
+          setHasThinkingTokens(false);
+
+          if (hasContent) {
+            toast.success("Jawaban selesai");
+          } else if (thinkingDetected) {
+            // Model only sent thinking without content - this can happen with some reasoning models
+            toast.info("AI selesai berpikir (tidak ada konten)");
+          } else {
+            toast.warning("Tidak ada respons dari AI");
+          }
         },
         (error: Error) => {
           if (error.name === "AbortError") {
             console.log("[AI Chat] Request aborted");
+            completeStreaming(sessionId);
+            setStatus("idle");
+            setThinkingContent("");
+            setHasThinkingTokens(false);
             return;
           }
           console.error("[AI Chat] Error:", error);
@@ -241,6 +285,7 @@ const ChatContainer = () => {
                 thinking={thinkingContent}
                 status={status}
                 errorMessage={errorMessage}
+                hasThinkingTokens={hasThinkingTokens}
               />
             </div>
           )}
