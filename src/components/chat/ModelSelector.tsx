@@ -23,9 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { useModels, ModelFilter, ModelSort } from "@/hooks/useModels";
+import { useModels, ModelSort } from "@/hooks/useModels";
 import { AIModel } from "@/lib/chatDB";
 import { formatPrice } from "@/services/openRouterApi";
 
@@ -52,10 +51,7 @@ export function ModelSelector({
 }: ModelSelectorProps) {
   const {
     models,
-    allModels,
     isLoading,
-    filter,
-    setFilter,
     sort,
     setSort,
     getModel,
@@ -105,25 +101,8 @@ export function ModelSelector({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-[320px]">
-        {/* Filter Tabs */}
-        <div className="p-2 border-b">
-          <Tabs
-            value={filter}
-            onValueChange={(v) => setFilter(v as ModelFilter)}
-            className="w-full"
-          >
-            <TabsList className="w-full grid grid-cols-3">
-              <TabsTrigger value="all" className="text-xs">
-                Semua ({allModels.length})
-              </TabsTrigger>
-              <TabsTrigger value="free" className="text-xs">
-                Gratis ({allModels.filter((m) => m.isFree).length})
-              </TabsTrigger>
-              <TabsTrigger value="paid" className="text-xs">
-                Berbayar ({allModels.filter((m) => !m.isFree).length})
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+        <div className="p-2 border-b text-xs text-muted-foreground text-center">
+          Menampilkan model gratis atau harga $0
         </div>
 
         {/* Sort & Refresh */}

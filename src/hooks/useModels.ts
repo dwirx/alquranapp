@@ -1,17 +1,16 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { AIModel, getAllModels, saveModels, getSetting, setSetting } from "@/lib/chatDB";
 import { fetchModels, FALLBACK_MODELS } from "@/services/openRouterApi";
+import { filterFreeOrZeroPriceModels } from "@/hooks/modelFilters";
 
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
-export type ModelFilter = "all" | "free" | "paid";
 export type ModelSort = "newest" | "oldest" | "name-asc" | "name-desc" | "price-asc" | "price-desc" | "context-desc";
 
 export function useModels() {
   const [models, setModels] = useState<AIModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<ModelFilter>("all");
   const [sort, setSort] = useState<ModelSort>("newest");
 
   // Fetch and cache models
@@ -60,12 +59,7 @@ export function useModels() {
 
   // Filter and sort models
   const processedModels = useMemo(() => {
-    // First filter
-    let result = models.filter((model) => {
-      if (filter === "free") return model.isFree;
-      if (filter === "paid") return !model.isFree;
-      return true;
-    });
+    let result = filterFreeOrZeroPriceModels(models);
 
     // Then sort
     result = [...result].sort((a, b) => {
@@ -96,7 +90,7 @@ export function useModels() {
     });
 
     return result;
-  }, [models, filter, sort]);
+  }, [models, sort]);
 
   // Get model by ID
   const getModel = useCallback(
@@ -116,8 +110,6 @@ export function useModels() {
     allModels: models,
     isLoading,
     error,
-    filter,
-    setFilter,
     sort,
     setSort,
     getModel,
