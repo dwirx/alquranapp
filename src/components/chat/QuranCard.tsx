@@ -110,20 +110,27 @@ const QuranCard = ({ surah, ayat, arabic, surahName }: QuranCardProps) => {
   );
 
   return (
-    <div className="my-3 rounded-xl border-l-4 border-primary bg-primary/5 overflow-hidden">
+    <div className="my-4 rounded-2xl border border-border/50 glass-effect overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
       {/* Header */}
       <div
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-primary/10 transition-colors"
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-primary/5 transition-colors border-b border-border/40"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-4 w-4 text-primary" />
-          <span className="font-semibold text-primary">
-            {displayName}: {ayat}
-          </span>
-          {isLoading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-full bg-primary/10 text-primary">
+            <BookOpen className="h-4 w-4" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-bold text-foreground text-sm sm:text-base">
+              {displayName}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              Ayat {ayat}
+            </span>
+          </div>
+          {isLoading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground ml-2" />}
         </div>
-        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-muted">
           {expanded ? (
             <ChevronUp className="h-4 w-4 text-muted-foreground" />
           ) : (
@@ -135,8 +142,8 @@ const QuranCard = ({ surah, ayat, arabic, surahName }: QuranCardProps) => {
       {/* Content */}
       <div
         className={cn(
-          "overflow-hidden transition-all duration-300",
-          expanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+          "transition-all duration-300 ease-in-out",
+          expanded ? "max-h-[3000px] opacity-100" : "max-h-0 opacity-0"
         )}
       >
         <div className="px-4 pb-4 space-y-4">

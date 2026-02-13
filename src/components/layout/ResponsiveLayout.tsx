@@ -7,12 +7,14 @@ interface ResponsiveLayoutProps {
   children: ReactNode;
   showHeader?: boolean;
   headerClassName?: string;
+  withBottomNavPadding?: boolean;
 }
 
 export function ResponsiveLayout({
   children,
   showHeader = true,
   headerClassName,
+  withBottomNavPadding = true,
 }: ResponsiveLayoutProps) {
   return (
     <div className="min-h-screen bg-background flex">
@@ -29,7 +31,7 @@ export function ResponsiveLayout({
         )}
 
         {/* Page Content */}
-        <main className="flex-1 pb-20 lg:pb-0">
+        <main className={withBottomNavPadding ? "flex-1 pb-20 lg:pb-0" : "flex-1"}>
           {children}
         </main>
 

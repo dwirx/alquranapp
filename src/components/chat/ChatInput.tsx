@@ -40,34 +40,31 @@ const ChatInput = ({ onSend, disabled, placeholder }: ChatInputProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="relative">
-      <div className="flex items-end gap-2 p-2 rounded-2xl border-2 border-border bg-card shadow-lg focus-within:border-primary/50 transition-colors">
+    <form onSubmit={handleSubmit} className="relative flex items-end gap-2 w-full">
+      <div className="flex-1 flex items-end gap-2 p-1.5 rounded-lg border border-border bg-card/50 shadow-sm hover:border-primary/50 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all duration-200">
         <Textarea
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder || "Ketik pertanyaan tentang Al-Quran..."}
+          placeholder={placeholder || "Ketik pertanyaan..."}
           disabled={disabled}
-          className="flex-1 min-h-[44px] max-h-[200px] border-0 bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base"
+          className="flex-1 min-h-[36px] max-h-[150px] border-0 bg-transparent p-1.5 resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm placeholder:text-muted-foreground leading-normal"
           rows={1}
         />
         <Button
           type="submit"
           size="icon"
           disabled={disabled || !input.trim()}
-          className="shrink-0 h-10 w-10 rounded-xl"
+          className="shrink-0 h-8 w-8 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all duration-200 active:scale-95 mb-0.5 mr-0.5"
         >
           {disabled ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
           ) : (
-            <Send className="h-5 w-5" />
+            <Send className="h-3.5 w-3.5 ml-0.5" />
           )}
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground text-center mt-2">
-        Tekan Enter untuk mengirim, Shift+Enter untuk baris baru
-      </p>
     </form>
   );
 };

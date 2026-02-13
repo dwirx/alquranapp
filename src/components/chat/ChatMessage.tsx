@@ -246,31 +246,31 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
   return (
     <div
       className={cn(
-        "flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300",
+        "flex gap-2.5 sm:gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300",
         isUser ? "flex-row-reverse" : "flex-row"
       )}
     >
       {/* Avatar */}
       <div
         className={cn(
-          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-          isUser ? "bg-primary text-primary-foreground" : "bg-muted"
+          "flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shadow-sm mt-1",
+          isUser ? "bg-primary text-primary-foreground" : "bg-card border border-border/50 text-primary"
         )}
       >
         {isUser ? (
-          <User className="h-4 w-4" />
+          <User className="h-4 w-4 sm:h-5 sm:w-5" />
         ) : (
-          <Bot className="h-4 w-4 text-primary" />
+          <Bot className="h-4 w-4 sm:h-5 sm:w-5" />
         )}
       </div>
 
       {/* Message Bubble */}
       <div
         className={cn(
-          "flex-1 max-w-[85%] rounded-2xl px-4 py-3",
+          "flex-1 min-w-0 max-w-[calc(100%-2.5rem)] sm:max-w-[88%] lg:max-w-[85%] rounded-2xl px-4 py-3 sm:px-5 sm:py-4 shadow-sm",
           isUser
-            ? "bg-primary text-primary-foreground rounded-tr-sm"
-            : "bg-muted rounded-tl-sm"
+            ? "bubble-user text-primary-foreground rounded-br-sm"
+            : "bubble-bot text-foreground rounded-bl-sm"
         )}
       >
         {renderContent()}

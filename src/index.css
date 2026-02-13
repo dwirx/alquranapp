@@ -51,6 +51,7 @@
     --ring: 158 45% 22%;
 
     --radius: 0.75rem;
+    --bottom-nav-height: 5rem;
 
     /* Custom Quran-specific tokens */
     --quran-gold: 42 85% 50%;
@@ -132,7 +133,12 @@
     --sidebar-accent: 150 15% 18%;
     --sidebar-accent-foreground: 40 25% 95%;
     --sidebar-border: 150 15% 15%;
-    --sidebar-ring: 42 70% 50%;
+    --sidebar-ring: 42 70% 50%; /* End of dark mode variables */
+
+    /* Glassmorphism Tokens */
+    --glass-border: 40 30% 97% / 0.1;
+    --glass-highlight: 40 30% 97% / 0.05;
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
   }
 }
 
@@ -142,7 +148,10 @@
   }
 
   body {
-    @apply bg-background text-foreground font-serif antialiased;
+    @apply bg-background text-foreground font-serif antialiased selection:bg-primary/20 selection:text-primary;
+    background-image: radial-gradient(circle at 50% 0%, hsl(var(--primary) / 0.05) 0%, transparent 60%),
+                      radial-gradient(circle at 100% 100%, hsl(var(--quran-gold) / 0.05) 0%, transparent 50%);
+    background-attachment: fixed;
   }
 
   /* Arabic text styling - responsive */
@@ -299,11 +308,45 @@
     }
   }
 
-  /* Glass effect */
+  /* Enhanced Glass effect */
   .glass-effect {
-    background: hsl(var(--background) / 0.8);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  }
+
+  .dark .glass-effect {
+    background: rgba(10, 10, 10, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* Premium Glass Capsule (for input) */
+  .glass-capsule {
+    background: hsl(var(--background) / 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsl(var(--foreground) / 0.05);
+    box-shadow: var(--shadow-elevated), 0 0 0 1px hsl(var(--foreground) / 0.02);
+  }
+
+  .dark .glass-capsule {
+    background: hsl(var(--card) / 0.6);
+    border: 1px solid hsl(var(--foreground) / 0.08);
+  }
+
+  /* Message Bubble Gradients */
+  .bubble-user {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.9) 100%);
+    box-shadow: 0 4px 15px -3px hsl(var(--primary) / 0.3);
+  }
+
+  .bubble-bot {
+    background: hsl(var(--card) / 0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid hsl(var(--border) / 0.5);
+    box-shadow: var(--shadow-card);
   }
 
   /* Shimmer loading effect */
@@ -380,9 +423,25 @@
 
   /* Chat prose styling */
   .prose-chat {
-    font-size: 0.9375rem;
-    line-height: 1.7;
+    font-size: 1rem;
+    line-height: 1.75;
     color: inherit;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  @media (min-width: 640px) {
+    .prose-chat {
+      font-size: 0.9375rem;
+      line-height: 1.7;
+    }
+  }
+
+  .prose-chat p,
+  .prose-chat li,
+  .prose-chat blockquote {
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .prose-chat > *:first-child {
@@ -412,6 +471,8 @@
   /* Code block styling enhancements */
   .prose-chat pre {
     margin: 1rem 0;
+    max-width: 100%;
+    overflow-x: auto;
   }
 
   .prose-chat pre code {

@@ -33,13 +33,13 @@ const ChatHistory = ({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-4 border-b border-border">
+      <div className="p-3 sm:p-4 border-b border-border">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <History className="h-4 w-4 text-primary" />
             <h3 className="font-semibold text-sm">Riwayat Chat</h3>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onNewSession}>
+          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={onNewSession}>
             <Plus className="h-4 w-4" />
           </Button>
         </div>
@@ -54,10 +54,10 @@ const ChatHistory = ({
             </div>
           ) : (
             sessions.map((session, index) => (
-              <div
+                <div
                 key={session.id}
                 className={cn(
-                  "group flex items-start gap-2 p-3 rounded-lg cursor-pointer transition-all duration-200",
+                  "group flex items-start gap-2 p-3.5 rounded-lg cursor-pointer transition-all duration-200",
                   "animate-in fade-in-0 slide-in-from-left-2",
                   currentSessionId === session.id
                     ? "bg-primary/10 text-primary"
@@ -76,7 +76,7 @@ const ChatHistory = ({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                  className="h-8 w-8 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDeleteSession(session.id);

@@ -11,7 +11,7 @@ import SuggestedQuestions from "./SuggestedQuestions";
 import { ChatHeader } from "./ChatHeader";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Loader2, Square } from "lucide-react";
+import { RefreshCw, Loader2, Square, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ChatStatus = "idle" | "searching" | "thinking" | "generating" | "error";
@@ -46,7 +46,8 @@ const ChatContainer = () => {
   } = useChat();
 
   const [status, setStatus] = useState<ChatStatus>("idle");
-  const [thinkingContent, setThinkingContent] = useState("");
+  const [thinkingContent, setThinkingContent] = useState<string>("");
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const [hasThinkingTokens, setHasThinkingTokens] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [lastQuestion, setLastQuestion] = useState("");
@@ -55,13 +56,21 @@ const ChatContainer = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Auto-scroll to bottom
-  const scrollToBottom = useCallback(() => {
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
+    setShowScrollButton(false);
+  };
+
+  // Handle scroll to show/hide button
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    const isBottom = scrollHeight - scrollTop - clientHeight < 100;
+    setShowScrollButton(!isBottom);
+  };
 
   useEffect(() => {
     scrollToBottom();
-  }, [currentSession?.messages, scrollToBottom, status]);
+  }, [currentSession?.messages, thinkingContent, status]);
 
   // Handle sending a message
   const handleSend = async (content: string) => {
@@ -248,9 +257,17 @@ const ChatContainer = () => {
   const messages = currentSession?.messages || [];
   const showSuggestions = messages.length === 0 && status === "idle";
   const isLoading = status !== "idle" && status !== "error";
+  const statusLabel =
+    status === "searching"
+      ? "Mencari ayat terkait..."
+      : status === "thinking"
+        ? "AI sedang berpikir..."
+        : status === "generating"
+          ? "AI sedang menulis jawaban..."
+          : null;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
       {/* Header with Model Selector */}
       <ChatHeader
         selectedModelId={selectedModel}
@@ -259,8 +276,20 @@ const ChatContainer = () => {
       />
 
       {/* Messages Area */}
-      <ScrollArea ref={scrollRef} className="flex-1 p-4">
-        <div className="max-w-3xl mx-auto space-y-6">
+      <ScrollArea
+        ref={scrollRef}
+        className="flex-1 min-h-0 px-3 sm:px-4 lg:px-6"
+        onScroll={handleScroll}
+      >
+        <div className="max-w-xl mx-auto py-4 sm:py-5 space-y-5 sm:space-y-6 pb-48 lg:pb-36">
+          {statusLabel && (
+            <div className="flex justify-center animate-in fade-in-0 duration-300">
+              <span className="text-xs sm:text-sm px-3 py-1 rounded-full border border-border bg-muted/60 text-muted-foreground">
+                {statusLabel}
+              </span>
+            </div>
+          )}
+
           {showSuggestions && (
             <div className="py-8 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
               <SuggestedQuestions onSelect={handleSend} disabled={isLoading} />
@@ -308,30 +337,45 @@ const ChatContainer = () => {
         </div>
       </ScrollArea>
 
-      {/* Input Area */}
-      <div className="p-4 border-t border-border bg-background/95 backdrop-blur-sm">
-        <div className="max-w-3xl mx-auto flex items-center gap-2">
-          {isLoading ? (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleStop}
-              className="gap-2 shrink-0"
-            >
-              <Square className="h-4 w-4 fill-current" />
-              Stop
-            </Button>
-          ) : null}
-          <div className="flex-1">
-            <ChatInput
-              onSend={handleSend}
-              disabled={isLoading}
-              placeholder={
-                isLoading
-                  ? "Menunggu respons AI..."
-                  : "Ketik pertanyaan tentang Al-Quran..."
-              }
-            />
+      {/* Scroll to Bottom Button */}
+      {showScrollButton && (
+        <div className="absolute bottom-[calc(var(--bottom-nav-height)+6rem)] lg:bottom-28 right-4 lg:right-8 z-20 animate-in fade-in slide-in-from-bottom-2">
+          <Button
+            variant="secondary"
+            size="icon"
+            className="h-10 w-10 rounded-full shadow-md bg-background/90 border border-border/50 hover:bg-background"
+            onClick={scrollToBottom}
+          >
+            <ChevronDown className="h-5 w-5 text-primary" />
+          </Button>
+        </div>
+      )}
+
+      {/* Input Area - Floating Island (Fixed Position) */}
+      <div className="fixed lg:absolute bottom-[var(--bottom-nav-height)] lg:bottom-4 left-0 right-0 z-20 flex justify-center px-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:pb-0 pointer-events-none">
+        <div className="w-full max-w-xl bg-background/40 backdrop-blur-xl border border-border/50 rounded-2xl shadow-elevated p-1.5 pointer-events-auto">
+          <div className="flex items-end gap-2">
+            {isLoading ? (
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={handleStop}
+                className="h-9 w-9 rounded-lg shrink-0 mb-0.5"
+              >
+                <Square className="h-4 w-4 fill-current" />
+              </Button>
+            ) : null}
+            <div className="flex-1 min-w-0">
+              <ChatInput
+                onSend={handleSend}
+                disabled={isLoading}
+                placeholder={
+                  isLoading
+                    ? "Sedang merespons..."
+                    : "Tanya Ustadz..."
+                }
+              />
+            </div>
           </div>
         </div>
       </div>
