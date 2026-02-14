@@ -38,21 +38,24 @@ export function AyatCard({
   return (
     <div 
       id={`ayat-${ayat.nomorAyat}`}
-      className="group rounded-xl bg-card border border-border p-4 sm:p-5 md:p-6 transition-all hover:shadow-card hover:border-quran-gold/30 animate-fade-in"
+      className={cn(
+        "group rounded-xl bg-card border border-border p-3.5 sm:p-5 md:p-6 transition-all hover:shadow-card hover:border-quran-gold/30 animate-fade-in",
+        isPlaying && "ring-1 ring-primary/30 border-primary/40 shadow-card"
+      )}
     >
       {/* Header with Ayat Number and Actions */}
-      <div className="flex items-start justify-between mb-4 sm:mb-5">
+      <div className="flex items-start justify-between mb-3 sm:mb-5">
         <div className="ayat-number">
           {ayat.nomorAyat}
         </div>
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-1">
           {onToggleBookmark && (
             <Button
               variant="ghost"
               size="icon"
               onClick={onToggleBookmark}
               className={cn(
-                "h-9 w-9 sm:h-10 sm:w-10 touch-target",
+                "h-9 w-9 sm:h-10 sm:w-10 rounded-lg",
                 isBookmarked 
                   ? "text-quran-gold hover:text-quran-gold/80 hover:bg-quran-gold/10" 
                   : "hover:bg-primary/10 hover:text-primary"
@@ -66,7 +69,7 @@ export function AyatCard({
             variant="ghost"
             size="icon"
             onClick={() => onPlayAudio(ayat)}
-            className="h-9 w-9 sm:h-10 sm:w-10 hover:bg-primary/10 hover:text-primary touch-target"
+            className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg hover:bg-primary/10 hover:text-primary"
             title="Putar Audio"
           >
             {isPlaying ? (
@@ -79,7 +82,7 @@ export function AyatCard({
             variant="ghost"
             size="icon"
             onClick={() => onShowTafsir(ayat.nomorAyat)}
-            className="h-9 w-9 sm:h-10 sm:w-10 hover:bg-primary/10 hover:text-primary touch-target"
+            className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg hover:bg-primary/10 hover:text-primary"
             title="Lihat Tafsir"
           >
             <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -88,9 +91,9 @@ export function AyatCard({
       </div>
 
       {/* Arabic Text */}
-      <div className="mb-5 sm:mb-6 text-right py-2 sm:py-4 px-2 sm:px-4 rounded-lg bg-muted/30">
+      <div className="mb-4 sm:mb-6 text-right py-2.5 sm:py-4 px-2.5 sm:px-4 rounded-lg bg-muted/30">
         <p className={cn(
-          "font-arabic leading-loose text-foreground",
+          "font-arabic leading-[1.95] sm:leading-loose text-foreground",
           fontSizeClasses[fontSize]
         )}>
           {ayat.teksArab}

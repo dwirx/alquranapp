@@ -133,14 +133,14 @@ export function AudioPlayer({
   };
 
   return (
-    <div className="audio-player">
+    <div className="audio-player rounded-2xl border border-primary-foreground/15 bg-[linear-gradient(145deg,rgba(20,88,68,0.95),rgba(28,113,85,0.9))]">
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
       
       <div className="flex flex-col gap-2 sm:gap-3">
         {/* Header - Ayat info and close button */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2.5">
           <div className="flex-1 min-w-0">
-            <p className="text-xs sm:text-sm text-primary-foreground/90 truncate">
+            <p className="text-xs sm:text-sm text-primary-foreground/90 truncate font-medium">
               {surahName && <span className="font-medium">{surahName} • </span>}
               Ayat {ayat.nomorAyat}
             </p>
@@ -177,10 +177,10 @@ export function AudioPlayer({
         {/* Mobile Qari Selector */}
         <div className="sm:hidden">
           <Select value={selectedQari} onValueChange={(v) => setSelectedQari(v as QariId)}>
-            <SelectTrigger className="w-full h-9 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent side="top" sideOffset={8} className="z-[80] max-h-64">
+              <SelectTrigger className="w-full h-8 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground text-xs rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent side="top" sideOffset={8} className="z-[80] max-h-64">
               {QARI_LIST.map((qari) => (
                 <SelectItem key={qari.id} value={qari.id} className="text-sm">
                   {qari.name}
@@ -192,7 +192,7 @@ export function AudioPlayer({
 
         {/* Progress Bar */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <span className="text-xs text-primary-foreground/70 w-9 sm:w-10 text-right tabular-nums">
+          <span className="text-[11px] text-primary-foreground/70 w-9 sm:w-10 text-right tabular-nums">
             {formatTime(currentTime)}
           </span>
           <Slider
@@ -200,22 +200,22 @@ export function AudioPlayer({
             max={duration || 100}
             step={0.1}
             onValueChange={handleSeek}
-            className="flex-1"
+            className="flex-1 [&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
           />
-          <span className="text-xs text-primary-foreground/70 w-9 sm:w-10 tabular-nums">
+          <span className="text-[11px] text-primary-foreground/70 w-9 sm:w-10 tabular-nums">
             {formatTime(duration)}
           </span>
         </div>
 
         {/* Controls */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={onPrevious}
               disabled={!hasPrevious}
-              className="h-9 w-9 sm:h-10 sm:w-10 text-primary-foreground hover:bg-primary-foreground/20 disabled:opacity-30 touch-target"
+              className="h-9 w-9 sm:h-10 sm:w-10 text-primary-foreground hover:bg-primary-foreground/20 disabled:opacity-30"
             >
               <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
@@ -225,7 +225,7 @@ export function AudioPlayer({
               size="icon"
               onClick={togglePlay}
               disabled={isLoading}
-              className="h-11 w-11 sm:h-12 sm:w-12 text-primary-foreground hover:bg-primary-foreground/20 touch-target"
+              className="h-10 w-10 sm:h-12 sm:w-12 text-primary-foreground hover:bg-primary-foreground/20 rounded-full bg-primary-foreground/10"
             >
               {isLoading ? (
                 <div className="h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
@@ -241,7 +241,7 @@ export function AudioPlayer({
               size="icon"
               onClick={onNext}
               disabled={!hasNext}
-              className="h-9 w-9 sm:h-10 sm:w-10 text-primary-foreground hover:bg-primary-foreground/20 disabled:opacity-30 touch-target"
+              className="h-9 w-9 sm:h-10 sm:w-10 text-primary-foreground hover:bg-primary-foreground/20 disabled:opacity-30"
             >
               <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
@@ -275,7 +275,7 @@ export function AudioPlayer({
             variant="ghost"
             size="icon"
             onClick={() => setIsMuted(!isMuted)}
-            className="sm:hidden h-9 w-9 text-primary-foreground hover:bg-primary-foreground/20 touch-target"
+            className="sm:hidden h-9 w-9 text-primary-foreground hover:bg-primary-foreground/20"
           >
             {isMuted ? (
               <VolumeX className="h-4 w-4" />

@@ -160,7 +160,7 @@ const SurahPage = () => {
 
   return (
     <ResponsiveLayout>
-      <div className={currentAyat ? "pb-56 sm:pb-60 lg:pb-40" : "pb-8"}>
+      <div className={currentAyat ? "pb-[19rem] sm:pb-60 lg:pb-40" : "pb-8"}>
         <div className="container py-4 sm:py-6">
           {/* Back Link */}
           <Link
@@ -270,8 +270,8 @@ const SurahPage = () => {
 
         {/* Floating Audio Player */}
         {currentAyat && (
-          <div className="fixed left-0 right-0 bottom-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] lg:bottom-0 lg:left-60 p-3 sm:p-4 glass-effect border-t border-border z-[60]">
-            <div className="container max-w-4xl mx-auto">
+          <div className="fixed left-0 right-0 bottom-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom)+0.35rem)] lg:bottom-0 lg:left-60 px-3 sm:px-4 z-[60]">
+            <div className="container max-w-3xl mx-auto">
               <AudioPlayer
                 ayat={currentAyat}
                 surahName={surah.namaLatin}
