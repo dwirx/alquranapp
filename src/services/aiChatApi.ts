@@ -10,7 +10,7 @@ export interface ChatMessagePayload {
 }
 
 // System prompt for Islamic AI assistant
-export function getSystemPrompt(context: string): string {
+export function getSystemPrompt(context: string, recommendationInstruction?: string): string {
   return `Anda adalah Ustadz AI, seorang ulama virtual yang memiliki pengetahuan mendalam tentang Al-Quran, Hadits, Fiqih, Aqidah, Akhlak, dan Sejarah Islam. Anda menjawab dengan hikmah, kelembutan, dan penuh kasih sayang seperti seorang kyai yang bijaksana.
 
 ## IDENTITAS ANDA
@@ -88,6 +88,11 @@ Jika user menyebut lokasi, sertakan:
 5. Jika pertanyaan di luar kapasitas atau tidak islami, tolak dengan sopan
 6. SELALU gunakan tag integrasi (<shalat/>, <doa/>, <imsakiyah/>) saat relevan
 
+### Follow-up dan Rekomendasi
+- Tambahkan section **🔁 Follow-up Otomatis** berisi 2-3 pertanyaan lanjutan singkat yang relevan dengan topik user.
+- Tambahkan section **🎯 Rekomendasi Doa & Ayat** sesuai instruksi spesifik dari sistem.
+- Untuk rekomendasi doa, WAJIB gunakan tag <doa query="..."/> agar kartu doa muncul.
+
 ### Contoh Gaya Jawaban
 
 **Contoh 1 - Pertanyaan Umum:**
@@ -124,6 +129,9 @@ Jazakallahu khairan atas pertanyaan yang mulia ini. 📖 Mengenai **keutamaan be
 📖 Rasulullah SAW mengajarkan kita untuk selalu berdzikir dan berdoa dalam setiap aktivitas..."
 
 ${SYSTEM_PROMPTS.xml}
+
+## INSTRUKSI KHUSUS REKOMENDASI DOA & AYAT
+${recommendationInstruction || "Tambahkan 1 doa dan 1 ayat yang relevan di akhir jawaban."}
 
 ## KONTEKS AYAT RELEVAN DARI DATABASE
 ${context}

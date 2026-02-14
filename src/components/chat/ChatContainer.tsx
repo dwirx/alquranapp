@@ -4,10 +4,12 @@ import { useChat } from "@/contexts/ChatContext";
 import { searchQuranVector, formatVectorResultsForContext } from "@/services/vectorSearchApi";
 import { streamAiResponse, getSystemPrompt, ChatMessagePayload } from "@/services/aiChatApi";
 import { ChatMessage as ChatMessageType } from "@/types/chat";
+import { buildDoaAyatRecommendationInstruction, generateAutoFollowUps } from "@/lib/chatEnhancements";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
 import ThinkingIndicator from "./ThinkingIndicator";
 import SuggestedQuestions from "./SuggestedQuestions";
+import FollowUpSuggestions from "./FollowUpSuggestions";
 import { ChatHeader } from "./ChatHeader";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -51,6 +53,7 @@ const ChatContainer = () => {
   const [hasThinkingTokens, setHasThinkingTokens] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [lastQuestion, setLastQuestion] = useState("");
+  const [autoFollowUps, setAutoFollowUps] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -90,6 +93,7 @@ const ChatContainer = () => {
     setHasThinkingTokens(false);
     setErrorMessage("");
     setLastQuestion(content);
+    setAutoFollowUps([]);
 
     // Capture chat history BEFORE adding the new user message
     // Use session.messages which is the most up-to-date from state or newly created session
@@ -125,7 +129,8 @@ const ChatContainer = () => {
 
       // Step 2: Prepare messages for LLM
       // Use the captured chatHistory which contains messages from the correct session
-      const systemPrompt = getSystemPrompt(context);
+      const recommendationInstruction = buildDoaAyatRecommendationInstruction(content);
+      const systemPrompt = getSystemPrompt(context, recommendationInstruction);
 
       const llmMessages: ChatMessagePayload[] = [
         { role: "system", content: systemPrompt },
@@ -188,6 +193,7 @@ const ChatContainer = () => {
           setHasThinkingTokens(false);
 
           if (hasContent) {
+            setAutoFollowUps(generateAutoFollowUps(content));
             toast.success("Jawaban selesai");
           } else if (thinkingDetected) {
             // Model only sent thinking without content - this can happen with some reasoning models
@@ -203,6 +209,7 @@ const ChatContainer = () => {
             setStatus("idle");
             setThinkingContent("");
             setHasThinkingTokens(false);
+            setAutoFollowUps([]);
             return;
           }
           console.error("[AI Chat] Error:", error);
@@ -216,6 +223,7 @@ const ChatContainer = () => {
       console.error("[AI Chat] Unexpected error:", error);
       setStatus("error");
       setErrorMessage(error instanceof Error ? error.message : "Terjadi kesalahan tidak terduga");
+      setAutoFollowUps([]);
     }
   };
 
@@ -255,7 +263,13 @@ const ChatContainer = () => {
   }
 
   const messages = currentSession?.messages || [];
+  const lastMessage = messages[messages.length - 1];
   const showSuggestions = messages.length === 0 && status === "idle";
+  const showFollowUps =
+    status === "idle" &&
+    autoFollowUps.length > 0 &&
+    lastMessage?.role === "assistant" &&
+    !lastMessage?.isStreaming;
   const isLoading = status !== "idle" && status !== "error";
   const statusLabel =
     status === "searching"
@@ -307,6 +321,16 @@ const ChatContainer = () => {
               <ChatMessage message={message} />
             </div>
           ))}
+
+          {showFollowUps && (
+            <div className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+              <FollowUpSuggestions
+                questions={autoFollowUps}
+                onSelect={handleSend}
+                disabled={isLoading}
+              />
+            </div>
+          )}
 
           {(isLoading || status === "error") && (
             <div className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
