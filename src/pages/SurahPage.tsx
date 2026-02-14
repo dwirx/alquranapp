@@ -28,6 +28,7 @@ const SurahPage = () => {
   const surahNumber = parseInt(id || "1", 10);
 
   const [currentAyat, setCurrentAyat] = useState<Ayat | null>(null);
+  const [autoPlayActive, setAutoPlayActive] = useState(false);
   const [tafsirAyat, setTafsirAyat] = useState<number | null>(null);
 
   const { isBookmarked, toggleBookmark } = useBookmarks();
@@ -48,8 +49,10 @@ const SurahPage = () => {
   const handlePlayAudio = useCallback((ayat: Ayat) => {
     if (currentAyat?.nomorAyat === ayat.nomorAyat) {
       setCurrentAyat(null);
+      setAutoPlayActive(false);
     } else {
       setCurrentAyat(ayat);
+      setAutoPlayActive(true);
     }
   }, [currentAyat]);
 
@@ -57,6 +60,7 @@ const SurahPage = () => {
     if (!surah || !currentAyat) return;
     const nextIndex = surah.ayat.findIndex(a => a.nomorAyat === currentAyat.nomorAyat) + 1;
     if (nextIndex < surah.ayat.length) {
+      setAutoPlayActive(true);
       setCurrentAyat(surah.ayat[nextIndex]);
     }
   }, [surah, currentAyat]);
@@ -65,6 +69,7 @@ const SurahPage = () => {
     if (!surah || !currentAyat) return;
     const prevIndex = surah.ayat.findIndex(a => a.nomorAyat === currentAyat.nomorAyat) - 1;
     if (prevIndex >= 0) {
+      setAutoPlayActive(true);
       setCurrentAyat(surah.ayat[prevIndex]);
     }
   }, [surah, currentAyat]);
@@ -98,6 +103,17 @@ const SurahPage = () => {
       }
     }
   }, [surah, location.hash]);
+
+  // Keep active ayat visible when audio moves to next/previous ayat
+  useEffect(() => {
+    if (!currentAyat) return;
+    const element = document.getElementById(`ayat-${currentAyat.nomorAyat}`);
+    if (!element) return;
+
+    setTimeout(() => {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 120);
+  }, [currentAyat?.nomorAyat]);
 
   const currentTafsirText = tafsir?.tafsir.find(t => t.ayat === tafsirAyat)?.teks;
 
@@ -259,11 +275,15 @@ const SurahPage = () => {
               <AudioPlayer
                 ayat={currentAyat}
                 surahName={surah.namaLatin}
+                autoPlay={autoPlayActive}
                 onNext={handleNextAyat}
                 onPrevious={handlePreviousAyat}
                 hasNext={currentAyatIndex < surah.ayat.length - 1}
                 hasPrevious={currentAyatIndex > 0}
-                onClose={() => setCurrentAyat(null)}
+                onClose={() => {
+                  setCurrentAyat(null);
+                  setAutoPlayActive(false);
+                }}
               />
             </div>
           </div>

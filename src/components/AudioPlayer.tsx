@@ -14,6 +14,7 @@ import { QARI_LIST, QariId, Ayat } from "@/types/quran";
 interface AudioPlayerProps {
   ayat: Ayat;
   surahName?: string;
+  autoPlay?: boolean;
   onNext?: () => void;
   onPrevious?: () => void;
   hasNext?: boolean;
@@ -24,6 +25,7 @@ interface AudioPlayerProps {
 export function AudioPlayer({ 
   ayat, 
   surahName,
+  autoPlay = false,
   onNext, 
   onPrevious, 
   hasNext = false, 
@@ -81,10 +83,29 @@ export function AudioPlayer({
   }, [volume, isMuted]);
 
   useEffect(() => {
-    setIsPlaying(false);
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.pause();
+    audio.currentTime = 0;
     setCurrentTime(0);
+    setIsPlaying(false);
     setIsLoading(true);
-  }, [ayat.nomorAyat]);
+
+    if (!autoPlay) return;
+
+    const startPlayback = async () => {
+      try {
+        await audio.play();
+        setIsPlaying(true);
+      } catch (error) {
+        console.warn("[AudioPlayer] Autoplay blocked:", error);
+        setIsPlaying(false);
+      }
+    };
+
+    void startPlayback();
+  }, [ayat.nomorAyat, autoPlay]);
 
   const togglePlay = () => {
     if (!audioRef.current) return;
