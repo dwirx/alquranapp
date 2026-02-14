@@ -267,7 +267,7 @@ const ChatContainer = () => {
           : null;
 
   return (
-    <div className="flex flex-col h-full min-h-0 overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden relative">
       {/* Header with Model Selector */}
       <ChatHeader
         selectedModelId={selectedModel}
@@ -281,7 +281,7 @@ const ChatContainer = () => {
         className="flex-1 min-h-0 px-3 sm:px-4 lg:px-6"
         onScroll={handleScroll}
       >
-        <div className="max-w-xl mx-auto py-4 sm:py-5 space-y-5 sm:space-y-6 pb-48 lg:pb-36">
+        <div className="max-w-full lg:max-w-2xl xl:max-w-3xl mx-auto py-4 sm:py-5 space-y-5 sm:space-y-6 pb-48 lg:pb-36">
           {statusLabel && (
             <div className="flex justify-center animate-in fade-in-0 duration-300">
               <span className="text-xs sm:text-sm px-3 py-1 rounded-full border border-border bg-muted/60 text-muted-foreground">
@@ -353,7 +353,7 @@ const ChatContainer = () => {
 
       {/* Input Area - Floating Island (Fixed Position) */}
       <div className="fixed lg:absolute bottom-[var(--bottom-nav-height)] lg:bottom-4 left-0 right-0 z-20 flex justify-center px-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:pb-0 pointer-events-none">
-        <div className="w-full max-w-xl bg-background/40 backdrop-blur-xl border border-border/50 rounded-2xl shadow-elevated p-1.5 pointer-events-auto">
+        <div className="w-full max-w-2xl bg-background/40 backdrop-blur-xl border border-border/50 rounded-2xl shadow-elevated p-1.5 pointer-events-auto">
           <div className="flex items-end gap-2">
             {isLoading ? (
               <Button
