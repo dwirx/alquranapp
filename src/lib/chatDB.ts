@@ -148,7 +148,7 @@ export async function migrateFromLocalStorage(): Promise<boolean> {
       // Add default modelId if not present
       const sessionWithModel = {
         ...session,
-        modelId: session.modelId || "openai/gpt-4.1-mini",
+        modelId: session.modelId || "openrouter/free",
       };
       await tx.store.put(sessionWithModel);
     }

@@ -18,14 +18,14 @@ export const DEFAULT_OPENROUTER_BASE_URL = normalizeOpenRouterBaseURL(
 const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || "";
 
 // Default model
-export const DEFAULT_MODEL = "openai/gpt-4.1-mini";
+export const DEFAULT_MODEL = "openrouter/free";
 
 // Fallback models when API fails
 export const FALLBACK_MODELS: AIModel[] = [
   {
-    id: "openai/gpt-4.1-mini",
-    name: "GPT-4.1 Mini",
-    description: "Fast and efficient model from OpenAI",
+    id: "openrouter/free",
+    name: "OpenRouter Free",
+    description: "OpenRouter free default route",
     pricing: { prompt: 0, completion: 0 },
     context_length: 128000,
     isFree: true,

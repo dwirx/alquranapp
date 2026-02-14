@@ -131,7 +131,7 @@ export function AudioPlayer({
               <SelectTrigger className="w-44 h-8 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground text-xs">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[80]">
                 {QARI_LIST.map((qari) => (
                   <SelectItem key={qari.id} value={qari.id} className="text-sm">
                     {qari.name}
@@ -159,7 +159,7 @@ export function AudioPlayer({
             <SelectTrigger className="w-full h-9 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground text-xs">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent side="top" sideOffset={8} className="z-[80] max-h-64">
               {QARI_LIST.map((qari) => (
                 <SelectItem key={qari.id} value={qari.id} className="text-sm">
                   {qari.name}
