@@ -27,10 +27,13 @@ import { cn } from "@/lib/utils";
 import { useModels, ModelSort } from "@/hooks/useModels";
 import { AIModel } from "@/lib/chatDB";
 import { formatPrice } from "@/services/openRouterApi";
+import { ChatApiConfig } from "@/types/chat";
 
 interface ModelSelectorProps {
   selectedModelId: string;
   onSelectModel: (modelId: string) => void;
+  apiConfig: ChatApiConfig;
+  customModels: string[];
   disabled?: boolean;
 }
 
@@ -47,6 +50,8 @@ const SORT_OPTIONS: { value: ModelSort; label: string }[] = [
 export function ModelSelector({
   selectedModelId,
   onSelectModel,
+  apiConfig,
+  customModels,
   disabled,
 }: ModelSelectorProps) {
   const {
@@ -56,7 +61,7 @@ export function ModelSelector({
     setSort,
     getModel,
     refreshModels,
-  } = useModels();
+  } = useModels(apiConfig, customModels);
   const [isOpen, setIsOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -78,7 +83,7 @@ export function ModelSelector({
   useEffect(() => {
     if (isLoading || models.length === 0) return;
     const selectedStillAvailable = models.some((model) => model.id === selectedModelId);
-    if (!selectedStillAvailable) {
+    if (!selectedStillAvailable && !selectedModelId) {
       onSelectModel(models[0].id);
     }
   }, [isLoading, models, selectedModelId, onSelectModel]);

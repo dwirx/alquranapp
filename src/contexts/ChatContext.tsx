@@ -1,6 +1,6 @@
 import { createContext, useContext, ReactNode } from "react";
 import { useChatDB } from "@/hooks/useChatDB";
-import { ChatSession, ChatMessage } from "@/types/chat";
+import { ChatSession, ChatMessage, ChatApiConfig } from "@/types/chat";
 
 // Define the context type
 interface ChatContextType {
@@ -8,6 +8,8 @@ interface ChatContextType {
   currentSession: ChatSession | undefined;
   currentSessionId: string | null;
   selectedModel: string;
+  apiConfig: ChatApiConfig;
+  customModels: string[];
   isLoading: boolean;
   isReady: boolean;
   createSession: () => Promise<ChatSession>;
@@ -18,6 +20,8 @@ interface ChatContextType {
   clearAllHistory: () => Promise<void>;
   switchSession: (sessionId: string) => Promise<void>;
   setSelectedModel: (modelId: string) => Promise<void>;
+  setApiConfig: (config: Partial<ChatApiConfig>) => Promise<void>;
+  setCustomModels: (models: string[]) => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType | null>(null);

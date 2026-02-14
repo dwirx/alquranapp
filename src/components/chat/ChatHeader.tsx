@@ -1,15 +1,27 @@
 import { MessageSquareText } from "lucide-react";
 import { ModelSelector } from "./ModelSelector";
+import { ApiSettingsDialog } from "./ApiSettingsDialog";
+import { ChatApiConfig } from "@/types/chat";
 
 interface ChatHeaderProps {
   selectedModelId: string;
   onSelectModel: (modelId: string) => void;
+  apiConfig: ChatApiConfig;
+  customModels: string[];
+  onApplySettings: (payload: {
+    apiConfig: ChatApiConfig;
+    customModels: string[];
+    selectedModelId?: string;
+  }) => Promise<void>;
   disabled?: boolean;
 }
 
 export function ChatHeader({
   selectedModelId,
   onSelectModel,
+  apiConfig,
+  customModels,
+  onApplySettings,
   disabled,
 }: ChatHeaderProps) {
   return (
@@ -24,11 +36,22 @@ export function ChatHeader({
         </div>
       </div>
 
-      <ModelSelector
-        selectedModelId={selectedModelId}
-        onSelectModel={onSelectModel}
-        disabled={disabled}
-      />
+      <div className="flex items-center gap-2">
+        <ApiSettingsDialog
+          apiConfig={apiConfig}
+          selectedModelId={selectedModelId}
+          customModels={customModels}
+          onApply={onApplySettings}
+          disabled={disabled}
+        />
+        <ModelSelector
+          selectedModelId={selectedModelId}
+          onSelectModel={onSelectModel}
+          apiConfig={apiConfig}
+          customModels={customModels}
+          disabled={disabled}
+        />
+      </div>
     </div>
   );
 }

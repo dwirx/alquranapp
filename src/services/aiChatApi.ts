@@ -1,8 +1,18 @@
+import OpenAI from "openai";
 import { SYSTEM_PROMPTS } from "quran-validator";
+import { ChatApiConfig } from "@/types/chat";
+import { DEFAULT_OPENROUTER_BASE_URL, normalizeOpenRouterBaseURL } from "./openRouterApi";
 
-// OpenRouter API configuration
-const OPENROUTER_API_URL = import.meta.env.VITE_OPENROUTER_API_URL || "https://openrouter.ai/api/v1/chat/completions";
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
+const FALLBACK_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || "";
+
+function getRuntimeConfig(config: ChatApiConfig): ChatApiConfig {
+  return {
+    baseURL: normalizeOpenRouterBaseURL(config.baseURL || DEFAULT_OPENROUTER_BASE_URL),
+    apiKey: config.apiKey || FALLBACK_API_KEY,
+    referer: config.referer || window.location.origin,
+    siteTitle: config.siteTitle || "Al-Quran App",
+  };
+}
 
 export interface ChatMessagePayload {
   role: "system" | "user" | "assistant";
@@ -143,130 +153,78 @@ Gunakan konteks di atas untuk memberikan jawaban yang akurat dengan kutipan ayat
 export async function streamAiResponse(
   messages: ChatMessagePayload[],
   modelId: string,
+  config: ChatApiConfig,
   onChunk: (content: string, thinking?: string) => void,
   onComplete: () => void,
   onError: (error: Error) => void,
   signal?: AbortSignal
 ): Promise<void> {
+  const runtimeConfig = getRuntimeConfig(config);
   console.log("[AI API] Starting stream request...");
-  console.log("[AI API] URL:", OPENROUTER_API_URL);
+  console.log("[AI API] URL:", runtimeConfig.baseURL);
   console.log("[AI API] Model:", modelId);
   console.log("[AI API] Messages count:", messages.length);
 
   try {
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": window.location.origin,
-        "X-Title": "Al-Quran App",
+    if (!runtimeConfig.apiKey) {
+      throw new Error("API key belum diatur. Silakan isi API key di pengaturan AI.");
+    }
+
+    const client = new OpenAI({
+      baseURL: runtimeConfig.baseURL,
+      apiKey: runtimeConfig.apiKey,
+      dangerouslyAllowBrowser: true,
+      defaultHeaders: {
+        "HTTP-Referer": runtimeConfig.referer,
+        "X-Title": runtimeConfig.siteTitle,
       },
-      body: JSON.stringify({
-        model: modelId,
-        messages: messages,
-        max_tokens: 4096,
-        temperature: 0.7,
-        top_p: 0.95,
-        stream: true,
-      }),
+    });
+
+    const stream = await client.chat.completions.create({
+      model: modelId,
+      messages,
+      max_tokens: 4096,
+      temperature: 0.7,
+      top_p: 0.95,
+      stream: true,
+    }, {
       signal,
     });
 
-    console.log("[AI API] Response status:", response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("[AI API] Error response:", errorText);
-      throw new Error(`API error ${response.status}: ${errorText.substring(0, 200)}`);
-    }
-
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error("No response body from API");
-    }
-
-    const decoder = new TextDecoder();
-    let buffer = "";
-    let chunkCount = 0;
     let contentReceived = false;
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        console.log("[AI API] Stream ended, total chunks:", chunkCount);
-        break;
+    for await (const chunk of stream) {
+      const choice = chunk.choices?.[0];
+      const delta = (choice?.delta || {}) as {
+        content?: string;
+        reasoning_content?: string;
+        reasoning?: string;
+        reasoning_details?: Array<{ type?: string; text?: string }>;
+      };
+
+      if (delta.reasoning_details && Array.isArray(delta.reasoning_details)) {
+        for (const detail of delta.reasoning_details) {
+          if (detail.type === "reasoning.text" && detail.text) {
+            onChunk("", detail.text);
+          }
+        }
       }
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
+      if (delta.reasoning_content) {
+        onChunk("", delta.reasoning_content);
+      }
 
-      for (const line of lines) {
-        if (line.startsWith("data: ")) {
-          const data = line.slice(6).trim();
-          if (data === "[DONE]") {
-            console.log("[AI API] Received [DONE] signal");
-            onComplete();
-            return;
-          }
+      if (delta.reasoning) {
+        onChunk("", delta.reasoning);
+      }
 
-          // Skip empty data
-          if (!data) continue;
+      if (delta.content) {
+        contentReceived = true;
+        onChunk(delta.content);
+      }
 
-          try {
-            const parsed = JSON.parse(data);
-            console.debug("[AI API] Parsed chunk:", JSON.stringify(parsed).substring(0, 200));
-
-            const choice = parsed.choices?.[0];
-            const delta = choice?.delta;
-            const message = choice?.message;
-
-            if (delta) {
-              chunkCount++;
-
-              // Handle reasoning_details array (OpenRouter format for reasoning models)
-              if (delta.reasoning_details && Array.isArray(delta.reasoning_details)) {
-                for (const detail of delta.reasoning_details) {
-                  if (detail.type === "reasoning.text" && detail.text) {
-                    onChunk("", detail.text);
-                  }
-                }
-              }
-
-              // Handle reasoning_content (alternative field name)
-              if (delta.reasoning_content) {
-                onChunk("", delta.reasoning_content);
-              }
-
-              // Handle reasoning field (some models use this)
-              if (delta.reasoning) {
-                onChunk("", delta.reasoning);
-              }
-
-              // Handle actual content
-              if (delta.content) {
-                contentReceived = true;
-                onChunk(delta.content);
-              }
-            } else if (message?.content) {
-              // Non-streaming format in stream (some models do this)
-              contentReceived = true;
-              onChunk(message.content);
-            }
-
-            // Check if finished
-            if (choice?.finish_reason) {
-              console.log("[AI API] Finish reason:", choice.finish_reason);
-            }
-          } catch (parseError) {
-            // Skip invalid JSON lines
-            console.debug("[AI API] Skipping invalid JSON:", data.substring(0, 100));
-          }
-        } else if (line.trim() && !line.startsWith(":")) {
-          // Log non-data lines for debugging
-          console.debug("[AI API] Non-data line:", line.substring(0, 100));
-        }
+      if (choice?.finish_reason) {
+        console.log("[AI API] Finish reason:", choice.finish_reason);
       }
     }
 
@@ -285,35 +243,67 @@ export async function streamAiResponse(
 // Non-streaming version for simpler use cases
 export async function sendAiMessage(
   messages: ChatMessagePayload[],
-  modelId: string
+  modelId: string,
+  config: ChatApiConfig
 ): Promise<string> {
+  const runtimeConfig = getRuntimeConfig(config);
   console.log("[AI API] Sending non-streaming request...");
 
-  const response = await fetch(OPENROUTER_API_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": window.location.origin,
-      "X-Title": "Al-Quran App",
-    },
-    body: JSON.stringify({
-      model: modelId,
-      messages: messages,
-      max_tokens: 4096,
-      temperature: 0.7,
-      top_p: 0.95,
-      stream: false,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`API error: ${response.status} - ${errorText}`);
+  if (!runtimeConfig.apiKey) {
+    throw new Error("API key belum diatur. Silakan isi API key di pengaturan AI.");
   }
 
-  const data = await response.json();
-  console.log("[AI API] Response received:", data.choices?.[0]?.finish_reason);
+  const client = new OpenAI({
+    baseURL: runtimeConfig.baseURL,
+    apiKey: runtimeConfig.apiKey,
+    dangerouslyAllowBrowser: true,
+    defaultHeaders: {
+      "HTTP-Referer": runtimeConfig.referer,
+      "X-Title": runtimeConfig.siteTitle,
+    },
+  });
 
-  return data.choices?.[0]?.message?.content || "";
+  const response = await client.chat.completions.create({
+    model: modelId,
+    messages,
+    max_tokens: 4096,
+    temperature: 0.7,
+    top_p: 0.95,
+  });
+
+  return response.choices?.[0]?.message?.content || "";
+}
+
+export async function testApiConnection(
+  config: ChatApiConfig,
+  modelId: string
+): Promise<{ ok: boolean; message: string }> {
+  const runtimeConfig = getRuntimeConfig(config);
+  if (!runtimeConfig.apiKey) {
+    return { ok: false, message: "API key kosong. Isi di setting atau .env." };
+  }
+
+  try {
+    const client = new OpenAI({
+      baseURL: runtimeConfig.baseURL,
+      apiKey: runtimeConfig.apiKey,
+      dangerouslyAllowBrowser: true,
+      defaultHeaders: {
+        "HTTP-Referer": runtimeConfig.referer,
+        "X-Title": runtimeConfig.siteTitle,
+      },
+    });
+
+    await client.chat.completions.create({
+      model: modelId,
+      messages: [{ role: "user", content: "Balas singkat: OK" }],
+      max_tokens: 16,
+      temperature: 0,
+    });
+
+    return { ok: true, message: "Koneksi API berhasil." };
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : "Gagal terhubung ke API";
+    return { ok: false, message: msg };
+  }
 }

@@ -103,3 +103,11 @@ export interface StreamChunk {
     finish_reason?: string;
   }[];
 }
+
+// Runtime API configuration for AI provider
+export interface ChatApiConfig {
+  baseURL: string;
+  apiKey: string;
+  referer: string;
+  siteTitle: string;
+}

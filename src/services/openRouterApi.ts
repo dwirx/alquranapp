@@ -1,7 +1,18 @@
 import { AIModel } from "@/lib/chatDB";
+import { ChatApiConfig } from "@/types/chat";
 
-const OPENROUTER_API_URL = "https://openrouter.ai/api/v1";
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
+export function normalizeOpenRouterBaseURL(baseURL: string): string {
+  const cleaned = baseURL.replace(/\/+$/, "");
+  if (cleaned.endsWith("/chat/completions")) {
+    return cleaned.replace(/\/chat\/completions$/, "");
+  }
+  return cleaned;
+}
+
+export const DEFAULT_OPENROUTER_BASE_URL = normalizeOpenRouterBaseURL(
+  import.meta.env.VITE_OPENROUTER_API_URL || "https://openrouter.ai/api/v1"
+);
+const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || "";
 
 // Default model
 export const DEFAULT_MODEL = "openai/gpt-4.1-mini";
@@ -66,14 +77,28 @@ interface OpenRouterModelsResponse {
   data: OpenRouterModel[];
 }
 
+function normalizeModelsEndpoint(baseURL: string): string {
+  const cleaned = normalizeOpenRouterBaseURL(baseURL);
+  return `${cleaned}/models`;
+}
+
 // Fetch all models from OpenRouter
-export async function fetchModels(): Promise<AIModel[]> {
+export async function fetchModels(config?: ChatApiConfig): Promise<AIModel[]> {
   try {
-    const response = await fetch(`${OPENROUTER_API_URL}/models`, {
+    const endpoint = normalizeModelsEndpoint(config?.baseURL || DEFAULT_OPENROUTER_BASE_URL);
+    const apiKey = config?.apiKey || OPENROUTER_API_KEY;
+    const referer = config?.referer || window.location.origin;
+    const siteTitle = config?.siteTitle || "Al-Quran App";
+
+    if (!apiKey) {
+      throw new Error("API key belum diatur");
+    }
+
+    const response = await fetch(endpoint, {
       headers: {
-        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-        "HTTP-Referer": window.location.origin,
-        "X-Title": "Al-Quran App",
+        Authorization: `Bearer ${apiKey}`,
+        "HTTP-Referer": referer,
+        "X-Title": siteTitle,
       },
     });
 

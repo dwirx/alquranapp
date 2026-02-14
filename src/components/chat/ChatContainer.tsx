@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { useChat } from "@/contexts/ChatContext";
 import { searchQuranVector, formatVectorResultsForContext } from "@/services/vectorSearchApi";
 import { streamAiResponse, getSystemPrompt, ChatMessagePayload } from "@/services/aiChatApi";
-import { ChatMessage as ChatMessageType } from "@/types/chat";
+import { ChatApiConfig, ChatMessage as ChatMessageType } from "@/types/chat";
 import { buildDoaAyatRecommendationInstruction, generateAutoFollowUps } from "@/lib/chatEnhancements";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
@@ -43,6 +43,10 @@ const ChatContainer = () => {
     completeStreaming,
     selectedModel,
     setSelectedModel,
+    apiConfig,
+    setApiConfig,
+    customModels,
+    setCustomModels,
     isLoading: isDBLoading,
     isReady,
   } = useChat();
@@ -163,6 +167,7 @@ const ChatContainer = () => {
       await streamAiResponse(
         llmMessages,
         selectedModel,
+        apiConfig,
         (chunk: string, thinking?: string) => {
           // Handle thinking/reasoning tokens
           if (thinking) {
@@ -252,6 +257,19 @@ const ChatContainer = () => {
     toast.success(`Model diubah ke ${modelId.split("/").pop()}`);
   };
 
+  const handleApplySettings = async (payload: {
+    apiConfig: ChatApiConfig;
+    customModels: string[];
+    selectedModelId?: string;
+  }) => {
+    await setApiConfig(payload.apiConfig);
+    await setCustomModels(payload.customModels);
+
+    if (payload.selectedModelId?.trim()) {
+      await setSelectedModel(payload.selectedModelId.trim());
+    }
+  };
+
   // Show loading while DB initializes
   if (isDBLoading || !isReady) {
     return (
@@ -286,6 +304,9 @@ const ChatContainer = () => {
       <ChatHeader
         selectedModelId={selectedModel}
         onSelectModel={handleModelChange}
+        apiConfig={apiConfig}
+        customModels={customModels}
+        onApplySettings={handleApplySettings}
         disabled={isLoading}
       />
 

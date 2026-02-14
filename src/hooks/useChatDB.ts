@@ -11,12 +11,26 @@ import {
   isIndexedDBSupported,
 } from "@/lib/chatDB";
 import { ChatSession, ChatMessage } from "@/types/chat";
-import { DEFAULT_MODEL } from "@/services/openRouterApi";
+import { ChatApiConfig } from "@/types/chat";
+import {
+  DEFAULT_MODEL,
+  DEFAULT_OPENROUTER_BASE_URL,
+  normalizeOpenRouterBaseURL,
+} from "@/services/openRouterApi";
+
+const DEFAULT_API_CONFIG: ChatApiConfig = {
+  baseURL: DEFAULT_OPENROUTER_BASE_URL,
+  apiKey: "",
+  referer: window.location.origin,
+  siteTitle: "Al-Quran App",
+};
 
 export function useChatDB() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [selectedModel, setSelectedModelState] = useState<string>(DEFAULT_MODEL);
+  const [apiConfig, setApiConfigState] = useState<ChatApiConfig>(DEFAULT_API_CONFIG);
+  const [customModels, setCustomModelsState] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isReady, setIsReady] = useState(false);
 
@@ -50,6 +64,28 @@ export function useChatDB() {
         const savedModel = await getSetting<string>("selectedModel");
         if (savedModel) {
           setSelectedModelState(savedModel);
+        }
+
+        const savedBaseURL = await getSetting<string>("apiBaseURL");
+        const savedApiKey = await getSetting<string>("apiKey");
+        const savedReferer = await getSetting<string>("apiReferer");
+        const savedSiteTitle = await getSetting<string>("apiSiteTitle");
+        const savedCustomModels = await getSetting<string>("customModels");
+        setApiConfigState({
+          baseURL: normalizeOpenRouterBaseURL(savedBaseURL || DEFAULT_API_CONFIG.baseURL),
+          apiKey: savedApiKey || DEFAULT_API_CONFIG.apiKey,
+          referer: savedReferer || DEFAULT_API_CONFIG.referer,
+          siteTitle: savedSiteTitle || DEFAULT_API_CONFIG.siteTitle,
+        });
+        if (savedCustomModels) {
+          try {
+            const parsed = JSON.parse(savedCustomModels) as string[];
+            if (Array.isArray(parsed)) {
+              setCustomModelsState(parsed.filter(Boolean));
+            }
+          } catch (error) {
+            console.warn("[ChatDB] Failed to parse custom models:", error);
+          }
         }
 
         setIsReady(true);
@@ -210,11 +246,34 @@ export function useChatDB() {
     await setSetting("selectedModel", modelId);
   }, []);
 
+  const setApiConfig = useCallback(async (config: Partial<ChatApiConfig>) => {
+    const next = {
+      ...apiConfig,
+      ...config,
+      baseURL: normalizeOpenRouterBaseURL(config.baseURL || apiConfig.baseURL),
+    };
+    setApiConfigState(next);
+    await Promise.all([
+      setSetting("apiBaseURL", next.baseURL),
+      setSetting("apiKey", next.apiKey),
+      setSetting("apiReferer", next.referer),
+      setSetting("apiSiteTitle", next.siteTitle),
+    ]);
+  }, [apiConfig]);
+
+  const setCustomModels = useCallback(async (models: string[]) => {
+    const sanitized = Array.from(new Set(models.map((m) => m.trim()).filter(Boolean)));
+    setCustomModelsState(sanitized);
+    await setSetting("customModels", JSON.stringify(sanitized));
+  }, []);
+
   return {
     sessions,
     currentSession,
     currentSessionId,
     selectedModel,
+    apiConfig,
+    customModels,
     isLoading,
     isReady,
     createSession,
@@ -225,5 +284,7 @@ export function useChatDB() {
     clearAllHistory,
     switchSession,
     setSelectedModel,
+    setApiConfig,
+    setCustomModels,
   };
 }

@@ -2,12 +2,20 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { AIModel, getAllModels, saveModels, getSetting, setSetting } from "@/lib/chatDB";
 import { fetchModels, FALLBACK_MODELS } from "@/services/openRouterApi";
 import { filterFreeOrZeroPriceModels } from "@/hooks/modelFilters";
+import { ChatApiConfig } from "@/types/chat";
 
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
 export type ModelSort = "newest" | "oldest" | "name-asc" | "name-desc" | "price-asc" | "price-desc" | "context-desc";
 
-export function useModels() {
+function formatCustomModelName(modelId: string): string {
+  return modelId
+    .replace(/^openrouter\//i, "")
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function useModels(config?: ChatApiConfig, customModelIds: string[] = []) {
   const [models, setModels] = useState<AIModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +42,7 @@ export function useModels() {
 
       // Fetch fresh models
       console.log("[Models] Fetching from API...");
-      const freshModels = await fetchModels();
+      const freshModels = await fetchModels(config);
 
       // Save to cache
       await saveModels(freshModels);
@@ -50,7 +58,7 @@ export function useModels() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [config]);
 
   // Load on mount
   useEffect(() => {
@@ -89,8 +97,21 @@ export function useModels() {
       }
     });
 
-    return result;
-  }, [models, sort]);
+    const existingIds = new Set(result.map((model) => model.id));
+    const customModels: AIModel[] = customModelIds
+      .filter((modelId) => modelId && !existingIds.has(modelId))
+      .map((modelId) => ({
+        id: modelId,
+        name: formatCustomModelName(modelId),
+        description: "Model custom dari pengaturan",
+        pricing: { prompt: 0, completion: 0 },
+        context_length: 128000,
+        isFree: true,
+        created: Date.now(),
+      }));
+
+    return [...customModels, ...result];
+  }, [customModelIds, models, sort]);
 
   // Get model by ID
   const getModel = useCallback(
