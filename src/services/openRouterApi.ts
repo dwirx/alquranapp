@@ -2,10 +2,13 @@ import { AIModel } from "@/lib/chatDB";
 import { ChatApiConfig } from "@/types/chat";
 
 export function normalizeOpenRouterBaseURL(baseURL: string): string {
-  const cleaned = baseURL.replace(/\/+$/, "");
-  if (cleaned.endsWith("/chat/completions")) {
-    return cleaned.replace(/\/chat\/completions$/, "");
-  }
+  let cleaned = baseURL.trim().replace(/\/+$/, "");
+  cleaned = cleaned
+    .replace(/\/chat\/completions?$/i, "")
+    .replace(/\/chat\/completion$/i, "")
+    .replace(/\/completions?$/i, "")
+    .replace(/\/completion$/i, "")
+    .replace(/\/models$/i, "");
   return cleaned;
 }
 
