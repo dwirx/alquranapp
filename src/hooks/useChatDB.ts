@@ -77,6 +77,7 @@ export function useChatDB() {
       updatedAt: Date.now(),
     };
 
+    // Use functional updates to ensure state is set synchronously relative to each other
     setSessions((prev) => [newSession, ...prev]);
     setCurrentSessionId(newSession.id);
 
@@ -86,14 +87,16 @@ export function useChatDB() {
     return newSession;
   }, [selectedModel]);
 
-  // Add message to current session
+  // Add message to current session (or to a specific session if sessionId provided)
   const addMessage = useCallback(
-    async (message: ChatMessage) => {
-      if (!currentSessionId) return;
+    async (message: ChatMessage, sessionId?: string) => {
+      // Use provided sessionId or fall back to currentSessionId
+      const targetSessionId = sessionId || currentSessionId;
+      if (!targetSessionId) return;
 
       setSessions((prev) =>
         prev.map((session) => {
-          if (session.id === currentSessionId) {
+          if (session.id === targetSessionId) {
             const updatedMessages = [...session.messages, message];
             const title =
               session.messages.length === 0 && message.role === "user"
@@ -119,12 +122,13 @@ export function useChatDB() {
     [currentSessionId]
   );
 
-  // Update last message (for streaming)
+  // Update last message (for streaming) - also accepts optional sessionId
   const updateLastMessage = useCallback(
-    (content: string, thinking?: string) => {
+    (content: string, thinking?: string, sessionId?: string) => {
+      const targetSessionId = sessionId || currentSessionId;
       setSessions((prev) =>
         prev.map((session) => {
-          if (session.id === currentSessionId && session.messages.length > 0) {
+          if (session.id === targetSessionId && session.messages.length > 0) {
             const messages = [...session.messages];
             const lastMessage = messages[messages.length - 1];
             if (lastMessage.role === "assistant") {
@@ -145,11 +149,12 @@ export function useChatDB() {
     [currentSessionId]
   );
 
-  // Complete streaming and save
-  const completeStreaming = useCallback(async () => {
+  // Complete streaming and save - also accepts optional sessionId
+  const completeStreaming = useCallback(async (sessionId?: string) => {
+    const targetSessionId = sessionId || currentSessionId;
     setSessions((prev) =>
       prev.map((session) => {
-        if (session.id === currentSessionId && session.messages.length > 0) {
+        if (session.id === targetSessionId && session.messages.length > 0) {
           const messages = [...session.messages];
           const lastMessage = messages[messages.length - 1];
           if (lastMessage.role === "assistant") {

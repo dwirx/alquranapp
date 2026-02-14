@@ -29,51 +29,159 @@ export function parseAndValidateQuranRefs(text: string): {
   };
 }
 
-// Regex-based parser for rendering (simpler, for UI)
+export type SegmentType = "text" | "quran" | "shalat" | "doa" | "imsakiyah";
+
+export interface ContentSegment {
+  type: SegmentType;
+  content: string;
+  surah?: number;
+  ayat?: string;
+  query?: string; // for doa search
+  provinsi?: string; // for shalat/imsakiyah
+  kabkota?: string; // for shalat/imsakiyah
+}
+
+// Regex-based parser for rendering (handles all custom tags)
 export function extractQuranTags(text: string): {
   segments: ContentSegment[];
 } {
-  const regex = /<quran\s+ref="(\d+):(\d+(?:-\d+)?)">([\s\S]*?)<\/quran>/g;
+  // Find all matches with their positions
+  interface TagMatch {
+    type: SegmentType;
+    index: number;
+    length: number;
+    surah?: number;
+    ayat?: string;
+    content?: string;
+    query?: string;
+    provinsi?: string;
+    kabkota?: string;
+  }
+
+  const matches: TagMatch[] = [];
+
+  // Find quran tags
+  const quranRegex = /<quran\s+ref="(\d+):(\d+(?:-\d+)?)">([\s\S]*?)<\/quran>/g;
+  let match: RegExpExecArray | null;
+  while ((match = quranRegex.exec(text)) !== null) {
+    matches.push({
+      type: "quran",
+      index: match.index,
+      length: match[0].length,
+      surah: parseInt(match[1]),
+      ayat: match[2],
+      content: match[3],
+    });
+  }
+
+  // Find shalat tags with optional provinsi and kabkota attributes
+  // Supports: <shalat/>, <shalat kabkota="X"/>, <shalat provinsi="X" kabkota="Y"/>
+  const shalatRegex = /<shalat(?:\s+(?:provinsi="([^"]*)")?(?:\s*kabkota="([^"]*)")?|\s+kabkota="([^"]*)")?\s*\/>/g;
+  while ((match = shalatRegex.exec(text)) !== null) {
+    matches.push({
+      type: "shalat",
+      index: match.index,
+      length: match[0].length,
+      provinsi: match[1] || undefined,
+      kabkota: match[2] || match[3] || undefined,
+    });
+  }
+
+  // Find doa tags
+  const doaRegex = /<doa\s+query="([^"]+)"\s*\/>/g;
+  while ((match = doaRegex.exec(text)) !== null) {
+    matches.push({
+      type: "doa",
+      index: match.index,
+      length: match[0].length,
+      query: match[1],
+    });
+  }
+
+  // Find imsakiyah tags with optional provinsi and kabkota attributes
+  const imsakiyahRegex = /<imsakiyah(?:\s+(?:provinsi="([^"]*)")?(?:\s*kabkota="([^"]*)")?|\s+kabkota="([^"]*)")?\s*\/>/g;
+  while ((match = imsakiyahRegex.exec(text)) !== null) {
+    matches.push({
+      type: "imsakiyah",
+      index: match.index,
+      length: match[0].length,
+      provinsi: match[1] || undefined,
+      kabkota: match[2] || match[3] || undefined,
+    });
+  }
+
+  // Sort by position
+  matches.sort((a, b) => a.index - b.index);
+
+  // Build segments
   const segments: ContentSegment[] = [];
   let lastIndex = 0;
-  let match: RegExpExecArray | null;
 
-  while ((match = regex.exec(text)) !== null) {
+  for (const m of matches) {
     // Add text before the match
-    if (match.index > lastIndex) {
+    if (m.index > lastIndex) {
+      const textContent = text.slice(lastIndex, m.index);
+      if (textContent.trim()) {
+        segments.push({
+          type: "text",
+          content: textContent,
+        });
+      }
+    }
+
+    // Add the matched segment
+    if (m.type === "quran") {
       segments.push({
-        type: "text",
-        content: text.slice(lastIndex, match.index),
+        type: "quran",
+        content: m.content || "",
+        surah: m.surah,
+        ayat: m.ayat,
+      });
+    } else if (m.type === "shalat") {
+      segments.push({
+        type: "shalat",
+        content: "",
+        provinsi: m.provinsi,
+        kabkota: m.kabkota,
+      });
+    } else if (m.type === "doa") {
+      segments.push({
+        type: "doa",
+        content: "",
+        query: m.query,
+      });
+    } else if (m.type === "imsakiyah") {
+      segments.push({
+        type: "imsakiyah",
+        content: "",
+        provinsi: m.provinsi,
+        kabkota: m.kabkota,
       });
     }
 
-    // Add the quran reference
-    segments.push({
-      type: "quran",
-      content: match[3],
-      surah: parseInt(match[1]),
-      ayat: match[2],
-    });
-
-    lastIndex = match.index + match[0].length;
+    lastIndex = m.index + m.length;
   }
 
   // Add remaining text
   if (lastIndex < text.length) {
+    const textContent = text.slice(lastIndex);
+    if (textContent.trim()) {
+      segments.push({
+        type: "text",
+        content: textContent,
+      });
+    }
+  }
+
+  // If no segments found, return the whole text
+  if (segments.length === 0) {
     segments.push({
       type: "text",
-      content: text.slice(lastIndex),
+      content: text,
     });
   }
 
   return { segments };
-}
-
-export interface ContentSegment {
-  type: "text" | "quran";
-  content: string;
-  surah?: number;
-  ayat?: string;
 }
 
 // Clean thinking tags if present

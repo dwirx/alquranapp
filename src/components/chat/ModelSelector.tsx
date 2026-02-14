@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Check,
   ChevronDown,
@@ -23,9 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { useModels, ModelFilter, ModelSort } from "@/hooks/useModels";
+import { useModels, ModelSort } from "@/hooks/useModels";
 import { AIModel } from "@/lib/chatDB";
 import { formatPrice } from "@/services/openRouterApi";
 
@@ -52,10 +51,7 @@ export function ModelSelector({
 }: ModelSelectorProps) {
   const {
     models,
-    allModels,
     isLoading,
-    filter,
-    setFilter,
     sort,
     setSort,
     getModel,
@@ -79,6 +75,14 @@ export function ModelSelector({
     setIsRefreshing(false);
   };
 
+  useEffect(() => {
+    if (isLoading || models.length === 0) return;
+    const selectedStillAvailable = models.some((model) => model.id === selectedModelId);
+    if (!selectedStillAvailable) {
+      onSelectModel(models[0].id);
+    }
+  }, [isLoading, models, selectedModelId, onSelectModel]);
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
@@ -86,7 +90,7 @@ export function ModelSelector({
           variant="outline"
           size="sm"
           disabled={disabled || isLoading}
-          className="gap-2 min-w-[140px] justify-between"
+          className="gap-2 min-w-[128px] sm:min-w-[156px] h-9 sm:h-10 justify-between"
         >
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -97,37 +101,20 @@ export function ModelSelector({
               ) : (
                 <Sparkles className="h-4 w-4 text-blue-500" />
               )}
-              <span className="truncate max-w-[100px]">{displayName}</span>
+              <span className="truncate max-w-[90px] sm:max-w-[120px]">{displayName}</span>
             </>
           )}
           <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-[320px]">
-        {/* Filter Tabs */}
-        <div className="p-2 border-b">
-          <Tabs
-            value={filter}
-            onValueChange={(v) => setFilter(v as ModelFilter)}
-            className="w-full"
-          >
-            <TabsList className="w-full grid grid-cols-3">
-              <TabsTrigger value="all" className="text-xs">
-                Semua ({allModels.length})
-              </TabsTrigger>
-              <TabsTrigger value="free" className="text-xs">
-                Gratis ({allModels.filter((m) => m.isFree).length})
-              </TabsTrigger>
-              <TabsTrigger value="paid" className="text-xs">
-                Berbayar ({allModels.filter((m) => !m.isFree).length})
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+      <DropdownMenuContent align="end" className="w-[300px] sm:w-[340px] max-w-[calc(100vw-1rem)]">
+        <div className="p-2.5 border-b text-xs text-muted-foreground text-center">
+          Menampilkan model gratis atau harga $0
         </div>
 
         {/* Sort & Refresh */}
-        <div className="p-2 border-b flex items-center gap-2">
+        <div className="p-2.5 border-b flex items-center gap-2">
           <ArrowUpDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <Select value={sort} onValueChange={(v) => setSort(v as ModelSort)}>
             <SelectTrigger className="h-8 text-xs flex-1">
@@ -155,7 +142,7 @@ export function ModelSelector({
         </div>
 
         {/* Model List */}
-        <div className="max-h-[300px] overflow-y-auto">
+        <div className="max-h-[min(52vh,360px)] overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -170,7 +157,7 @@ export function ModelSelector({
                 key={model.id}
                 onClick={() => handleSelect(model)}
                 className={cn(
-                  "flex items-center justify-between gap-2 cursor-pointer py-2",
+                  "flex items-center justify-between gap-2 cursor-pointer py-2.5",
                   selectedModelId === model.id && "bg-accent"
                 )}
               >
